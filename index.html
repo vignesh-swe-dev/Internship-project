@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions — Enterprise Workforce Gateway</title>
+  <link rel="icon" href="./Ceo%20Main/Assets/logo.png" type="image/png" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --bg: #020608;
+      --card-bg: rgba(10, 15, 24, 0.88);
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, 0.2);
+      --cyan-glow: 0 0 20px rgba(14, 239, 255, 0.35);
+      --green: #00e676;
+      --purple: #c084fc;
+      --amber: #ffaa00;
+      --text: #b8d4e8;
+      --text-dim: #5c7b94;
+      --border: rgba(14, 239, 255, 0.16);
+      --radius: 12px;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 32px 16px;
+    }
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0,0,0,0.12) 3px, rgba(0,0,0,0.12) 4px);
+      pointer-events: none;
+      z-index: 999;
+    }
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 1080px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+    }
+    .header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 22px;
+      background: rgba(14, 239, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--cyan-glow);
+    }
+    .logo-badge img {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+    .logo-badge span {
+      font-size: 13px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+      text-shadow: 0 0 18px rgba(14, 239, 255, 0.4);
+    }
+    .subtitle {
+      max-width: 620px;
+      font-size: 15px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      width: 100%;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(12px);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--cyan));
+      opacity: 0.6;
+      transition: opacity 0.25s ease, height 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-accent, var(--cyan));
+      box-shadow: 0 10px 28px rgba(0,0,0,0.5), 0 0 20px var(--card-glow, rgba(14,239,255,0.25));
+    }
+    .card:hover::before {
+      opacity: 1;
+      height: 4px;
+    }
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--card-accent, var(--cyan));
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      flex-grow: 1;
+    }
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--card-accent, var(--cyan));
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      background: rgba(10, 15, 24, 0.6);
+      padding: 8px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo-badge">
+        <img src="./Ceo%20Main/Assets/logo.png" alt="TES Logo" />
+        <span>Security Operations Centre</span>
+      </div>
+      <h1>Workforce & Intern Management System</h1>
+      <p class="subtitle">
+        Enterprise portal gateway for Thinkinfo Expert Solutions. Select your operational tier to authenticate and access your workstation.
+      </p>
+    </div>
+
+    <div class="grid">
+      <!-- CEO Portal -->
+      <a href="./Ceo%20Main/login-complete.html" class="card" style="--card-accent: #0ef; --card-glow: rgba(14,239,255,0.3);">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        </div>
+        <div class="card-title">CEO Portal</div>
+        <div class="card-desc">Executive dashboards, department organization, company-wide leave reviews, and broadcast notifications.</div>
+        <div class="card-footer">
+          <span>Enter Portal</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Manager Portal -->
+      <a href="./Manager%20Main/login-complete.html" class="card" style="--card-accent: #c084fc; --card-glow: rgba(192,132,252,0.3);">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="card-title">Manager Portal</div>
+        <div class="card-desc">Team attendance approval, salary editing, intern offer letters, experience letters, and certificates.</div>
+        <div class="card-footer">
+          <span>Enter Portal</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Employee Portal -->
+      <a href="./Employee%20Main/login-complete.html" class="card" style="--card-accent: #00e676; --card-glow: rgba(0,230,118,0.3);">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="card-title">Employee Portal</div>
+        <div class="card-desc">Personal attendance logs, monthly pay slips, leave submissions, and official relieving letter generation.</div>
+        <div class="card-footer">
+          <span>Enter Portal</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Intern Portal -->
+      <a href="./Intern%20Main/login-complete.html" class="card" style="--card-accent: #ffaa00; --card-glow: rgba(255,170,0,0.3);">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        </div>
+        <div class="card-title">Intern Portal</div>
+        <div class="card-desc">Internship milestones, attendance check-in, mentor reviews, and leave applications.</div>
+        <div class="card-footer">
+          <span>Enter Portal</span>
+          <span>→</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="system-status">
+      <span class="status-dot"></span>
+      <span>SYSTEM OPERATIONAL · ZERO-TRUST ARCHITECTURE · 2026</span>
+    </div>
+  </div>
+
+  <script>
+    // Matrix Rain animation
+    (function () {
+      var c = document.getElementById('matrixCanvas');
+      var ctx = c.getContext('2d');
+      var W, H, cols, drops;
+      var CH = '01アイウエオカキクケコサシスセソタチツテトABCDEF';
+
+      function resize() {
+        W = c.width = window.innerWidth;
+        H = c.height = window.innerHeight;
+        cols = Math.floor(W / 18);
+        drops = new Array(cols).fill(1);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      ctx.fillStyle = '#020608';
+      ctx.fillRect(0, 0, W, H);
+
+      function loop() {
+        ctx.fillStyle = 'rgba(2, 6, 8, 0.08)';
+        ctx.fillRect(0, 0, W, H);
+        ctx.font = '13px monospace';
+        for (var i = 0; i < drops.length; i++) {
+          var char = CH[Math.floor(Math.random() * CH.length)];
+          var x = i * 18;
+          var y = drops[i] * 18;
+          ctx.fillStyle = 'rgba(14, 239, 255, 0.7)';
+          ctx.fillText(char, x, y);
+          if (y > H && Math.random() > 0.98) drops[i] = 0;
+          drops[i]++;
+        }
+        requestAnimationFrame(loop);
+      }
+      loop();
+    })();
+  </script>
+</body>
+</html>
