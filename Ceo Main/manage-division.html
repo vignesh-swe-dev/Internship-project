@@ -1,0 +1,1371 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #c084fc;
+      --purple-dim: rgba(192, 132, 252, .25);
+      --purple-glow: 0 0 12px rgba(192, 132, 252, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px;
+      letter-spacing: .3px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .81rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,170,0,.5) }
+      50% { opacity: .85; box-shadow: 0 0 0 4px rgba(255,170,0,0) }
+    }
+
+    .nav-link svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 14px
+    }
+
+    /* ── MAIN ── */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ── TABLE PANEL ── */
+    .table-panel {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .08);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .table-panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .1), inset 0 1px 0 rgba(14, 239, 255, .12)
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: rgba(15, 22, 32, .7);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px
+    }
+
+    .panel-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .panel-title {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .5px
+    }
+
+    .panel-title-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .4
+      }
+    }
+
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center
+    }
+
+    .search-input {
+      background: rgba(14, 239, 255, .05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: .78rem;
+      padding: 6px 10px 6px 30px;
+      width: 190px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 8px rgba(14, 239, 255, .15)
+    }
+
+    .search-input::placeholder {
+      color: var(--text-dim)
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 8px;
+      color: var(--text-dim);
+      pointer-events: none
+    }
+
+    .search-icon svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: rgba(14, 239, 255, .1);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, box-shadow .2s;
+      letter-spacing: .3px
+    }
+
+    .add-btn:hover {
+      background: rgba(14, 239, 255, .18);
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .add-btn svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .table-scroll::-webkit-scrollbar {
+      height: 5px
+    }
+
+    .table-scroll::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem
+    }
+
+    thead tr {
+      background: rgba(14, 239, 255, .05);
+      border-bottom: 1px solid var(--border)
+    }
+
+    thead th {
+      padding: 11px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--cyan);
+      font-size: .76rem;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    thead th:first-child {
+      width: 60px
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(14, 239, 255, .06);
+      transition: background .15s
+    }
+
+    tbody tr:hover {
+      background: rgba(14, 239, 255, .04)
+    }
+
+    tbody tr:last-child {
+      border-bottom: none
+    }
+
+    tbody td {
+      padding: 11px 16px;
+      color: var(--text);
+      vertical-align: middle
+    }
+
+    .sn-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(14, 239, 255, .08);
+      border: 1px solid var(--border);
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--cyan)
+    }
+
+    .div-name-cell {
+      font-weight: 500;
+      color: #fff
+    }
+
+    .action-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .btn-edit,
+    .btn-delete {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 5px;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background .2s, box-shadow .2s, transform .1s;
+      letter-spacing: .3px
+    }
+
+    .btn-edit:hover,
+    .btn-delete:hover {
+      transform: translateY(-1px)
+    }
+
+    .btn-edit {
+      background: rgba(14, 239, 255, .1);
+      border-color: rgba(14, 239, 255, .3);
+      color: var(--cyan)
+    }
+
+    .btn-edit:hover {
+      background: rgba(14, 239, 255, .2);
+      box-shadow: 0 0 10px rgba(14, 239, 255, .25)
+    }
+
+    .btn-delete {
+      background: rgba(255, 58, 74, .1);
+      border-color: rgba(255, 58, 74, .3);
+      color: var(--red)
+    }
+
+    .btn-delete:hover {
+      background: rgba(255, 58, 74, .2);
+      box-shadow: 0 0 10px rgba(255, 58, 74, .25)
+    }
+
+    .btn-edit svg,
+    .btn-delete svg {
+      width: 12px;
+      height: 12px
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 22, 32, .5);
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .page-info {
+      font-size: .75rem;
+      color: var(--text-dim)
+    }
+
+    .page-info span {
+      color: var(--cyan);
+      font-weight: 600
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 4px
+    }
+
+    .page-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      font-size: .75rem;
+      cursor: pointer;
+      transition: background .2s, color .2s, border-color .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .page-btn:hover,
+    .page-btn.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .page-btn svg {
+      width: 12px;
+      height: 12px
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 8, .8);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .modal {
+      background: var(--bg-2);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 12px;
+      width: 420px;
+      max-width: calc(100vw - 40px);
+      box-shadow: 0 0 40px rgba(14, 239, 255, .15);
+      transform: translateY(20px) scale(.97);
+      transition: transform .25s
+    }
+
+    .modal-overlay.open .modal {
+      transform: none
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .modal-title {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: .5px
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, color .2s
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 58, 74, .1);
+      color: var(--red);
+      border-color: var(--red-dim)
+    }
+
+    .modal-close svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .modal-body {
+      padding: 20px
+    }
+
+    .form-group {
+      margin-bottom: 16px
+    }
+
+    .form-label {
+      display: block;
+      font-size: .76rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      letter-spacing: .4px;
+      text-transform: uppercase
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(14, 239, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: .82rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      font-family: inherit
+    }
+
+    .form-input:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 10px rgba(14, 239, 255, .12)
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border)
+    }
+
+    .btn-cancel {
+      padding: 8px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-size: .8rem;
+      cursor: pointer;
+      transition: background .2s, color .2s
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, .05);
+      color: var(--text)
+    }
+
+    .btn-save {
+      padding: 8px 18px;
+      background: rgba(14, 239, 255, .12);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      color: var(--cyan);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .btn-save:hover {
+      background: rgba(14, 239, 255, .22);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .confirm-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(255, 58, 74, .12);
+      border: 1px solid rgba(255, 58, 74, .3);
+      margin: 0 auto 14px
+    }
+
+    .confirm-icon svg {
+      width: 26px;
+      height: 26px;
+      color: var(--red)
+    }
+
+    .confirm-text {
+      text-align: center;
+      font-size: .85rem;
+      color: var(--text);
+      margin-bottom: 6px
+    }
+
+    .confirm-subtext {
+      text-align: center;
+      font-size: .76rem;
+      color: var(--text-dim)
+    }
+
+    .btn-delete-confirm {
+      padding: 8px 18px;
+      background: rgba(255, 58, 74, .12);
+      border: 1px solid rgba(255, 58, 74, .3);
+      border-radius: 6px;
+      color: var(--red);
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .btn-delete-confirm:hover {
+      background: rgba(255, 58, 74, .22);
+      box-shadow: var(--red-glow)
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: .8rem;
+      font-weight: 600;
+      z-index: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform .3s, opacity .3s;
+      pointer-events: none
+    }
+
+    .toast.show {
+      transform: none;
+      opacity: 1
+    }
+
+    .toast.success {
+      background: rgba(0, 230, 118, .1);
+      border-color: rgba(0, 230, 118, .3);
+      color: var(--green)
+    }
+
+    .toast.danger {
+      background: rgba(255, 58, 74, .1);
+      border-color: rgba(255, 58, 74, .3);
+      color: var(--red)
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+    }
+
+    @media(max-width:560px) {
+      .search-input {
+        width: 130px
+      }
+
+      .panel-header {
+        flex-direction: column;
+        align-items: flex-start
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-wrap">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="sidebar-title">Admin Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">Kr</div>
+      <div class="user-info">
+        <div class="user-name">Kr., CEO</div>
+        <div class="user-role">Chief Executive Officer</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="ceo-home-dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="ceo-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="add-manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Manager</span>
+      </a>
+      <a href="ceo-manage-managers.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Manager</span>
+      </a>
+      <a href="add-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Employee</span>
+      </a>
+      <a href="ceo-manage-employees.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Employee</span>
+      </a>
+      <a href="add-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <span>Add Division</span>
+      </a>
+      <a href="manage-division.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="18" height="7"/></svg>
+        <span>Manage Division</span>
+      </a>
+      <a href="add-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Add Department</span>
+      </a>
+      <a href="manage-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="12" x2="15" y2="22"/><line x1="3" y1="14" x2="21" y2="14"/></svg>
+        <span>Manage Department</span>
+      </a>
+      <a href="view_attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="ceo-employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Employee Feedback</span>
+      </a>
+      <a href="manager-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span>Manager Feedback</span>
+      </a>
+      <a href="manager-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg>
+        <span>Manager Leave</span>
+      </a>
+      <a href="add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="employee-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h4"/></svg>
+        <span>Employee Leave</span>
+      </a>
+      <a href="notify_manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Notify Manager</span>
+        <span class="nav-badge" id="navBadgeManager">2</span>
+      </a>
+      <a href="notify-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
+        <span>Notify Employee</span>
+        <span class="nav-badge" id="navBadgeEmp">5</span>
+      </a>
+      <a href="notify-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/></svg><span>Notify Intern</span><span class="nav-badge">3</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Manage Divisions</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="ceo-home-dashboard.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Manage Divisions</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="table-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <div class="panel-title-dot"></div>
+            <span class="panel-title">Manage Divisions</span>
+          </div>
+          <div class="panel-actions">
+            <div class="search-wrap">
+              <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg></span>
+              <input class="search-input" type="text" id="searchInput" placeholder="Search divisions…" />
+            </div>
+            <button class="add-btn" onclick="openAdd()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Division
+            </button>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>SN</th>
+                <th>Division Name</th>
+                <th>Edit</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div class="page-info">Showing <span id="showingInfo">1–9</span> of <span id="totalInfo">9</span> entries
+          </div>
+          <div class="page-btns" id="pageBtns"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <!-- ═══ ADD / EDIT MODAL ═══ -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modalTitle">Add Division</span>
+        <button class="modal-close" onclick="closeModal('editModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Division Name</label>
+          <input class="form-input" type="text" id="divNameInput" placeholder="Enter division name" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+        <button class="btn-save" onclick="saveEntry()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DELETE CONFIRM MODAL ═══ -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" style="color:var(--red)">Delete Division</span>
+        <button class="modal-close" onclick="closeModal('deleteModal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6" />
+            <path d="M14 11v6" />
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+          </svg>
+        </div>
+        <p class="confirm-text">Are you sure you want to delete <strong id="deleteName" style="color:#fff"></strong>?
+        </p>
+        <p class="confirm-subtext">This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn-delete-confirm" onclick="confirmDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="toastIcon"></svg>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ── Matrix Rain ── */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Data ── */
+      var data = [
+        { id: 1, name: 'Micro Biology' },
+        { id: 2, name: 'Mahad Ahmad' },
+        { id: 3, name: 'HR new' },
+        { id: 4, name: 'AWS cloud Engineer' },
+        { id: 5, name: 'IT' },
+        { id: 6, name: 'Agriculture.' },
+        { id: 7, name: 'HR' },
+        { id: 8, name: 'manar sen' },
+        { id: 9, name: 'manar' }
+      ];
+      var nextId = 10, editingId = null, deleteId = null, searchQ = '', currentPage = 1, perPage = 10;
+
+      function filtered() {
+        if (!searchQ) return data.slice();
+        var q = searchQ.toLowerCase();
+        return data.filter(function (r) { return r.name.toLowerCase().includes(q) });
+      }
+
+      function render() {
+        var rows = filtered();
+        var total = rows.length;
+        var totalPages = Math.max(1, Math.ceil(total / perPage));
+        if (currentPage > totalPages) currentPage = 1;
+        var start = (currentPage - 1) * perPage;
+        var pageRows = rows.slice(start, start + perPage);
+
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        if (!pageRows.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:28px;color:var(--text-dim)">No divisions found.</td></tr>';
+        } else {
+          pageRows.forEach(function (r, i) {
+            var tr = document.createElement('tr');
+            tr.innerHTML =
+              '<td><span class="sn-badge">' + (start + i + 1) + '</span></td>' +
+              '<td><span class="div-name-cell">' + esc(r.name) + '</span></td>' +
+              '<td><div class="action-wrap">' +
+              '<button class="btn-edit" onclick="openEdit(' + r.id + ')">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Edit' +
+              '</button>' +
+              '<button class="btn-delete" onclick="openDelete(' + r.id + ')">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete' +
+              '</button>' +
+              '</div></td>';
+            tbody.appendChild(tr);
+          });
+        }
+
+        var s = total === 0 ? 0 : start + 1, e = Math.min(start + perPage, total);
+        document.getElementById('showingInfo').textContent = s + '–' + e;
+        document.getElementById('totalInfo').textContent = total;
+
+        var pb = document.getElementById('pageBtns'); pb.innerHTML = '';
+        var prev = document.createElement('button'); prev.className = 'page-btn'; prev.disabled = currentPage === 1;
+        prev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>';
+        prev.onclick = function () { if (currentPage > 1) { currentPage--; render(); } };
+        pb.appendChild(prev);
+        for (var p = 1; p <= totalPages; p++) {
+          (function (pg) {
+            var btn = document.createElement('button'); btn.className = 'page-btn' + (pg === currentPage ? ' active' : '');
+            btn.textContent = pg; btn.onclick = function () { currentPage = pg; render(); };
+            pb.appendChild(btn);
+          })(p);
+        }
+        var nxt = document.createElement('button'); nxt.className = 'page-btn'; nxt.disabled = currentPage === totalPages;
+        nxt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+        nxt.onclick = function () { if (currentPage < totalPages) { currentPage++; render(); } };
+        pb.appendChild(nxt);
+      }
+
+      function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+      window.openAdd = function () {
+        editingId = null;
+        document.getElementById('modalTitle').textContent = 'Add Division';
+        document.getElementById('divNameInput').value = '';
+        openModal('editModal');
+      };
+
+      window.openEdit = function (id) {
+        var r = data.find(function (x) { return x.id === id });
+        if (!r) return;
+        editingId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Division';
+        document.getElementById('divNameInput').value = r.name;
+        openModal('editModal');
+      };
+
+      window.saveEntry = function () {
+        var name = document.getElementById('divNameInput').value.trim();
+        if (!name) { showToast('Please enter a division name.', 'danger'); return; }
+        if (editingId) {
+          var r = data.find(function (x) { return x.id === editingId });
+          if (r) r.name = name;
+          showToast('Division updated successfully.', 'success');
+        } else {
+          data.push({ id: nextId++, name: name });
+          showToast('Division added successfully.', 'success');
+        }
+        closeModal('editModal');
+        render();
+      };
+
+      window.openDelete = function (id) {
+        var r = data.find(function (x) { return x.id === id });
+        if (!r) return;
+        deleteId = id;
+        document.getElementById('deleteName').textContent = '"' + r.name + '"';
+        openModal('deleteModal');
+      };
+
+      window.confirmDelete = function () {
+        data = data.filter(function (x) { return x.id !== deleteId });
+        showToast('Division deleted.', 'danger');
+        closeModal('deleteModal');
+        render();
+      };
+
+      function openModal(id) { document.getElementById(id).classList.add('open') }
+      window.closeModal = function (id) { document.getElementById(id).classList.remove('open') };
+      document.querySelectorAll('.modal-overlay').forEach(function (o) {
+        o.addEventListener('click', function (e) { if (e.target === o) o.classList.remove('open') });
+      });
+
+      var toastTimer;
+      function showToast(msg, type) {
+        var t = document.getElementById('toast');
+        var icon = document.getElementById('toastIcon');
+        t.className = 'toast ' + type + ' show';
+        document.getElementById('toastMsg').textContent = msg;
+        icon.innerHTML = type === 'success'
+          ? '<polyline points="20 6 9 17 4 12"/>'
+          : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>';
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { t.classList.remove('show') }, 2800);
+      }
+
+      document.getElementById('searchInput').addEventListener('input', function () {
+        searchQ = this.value; currentPage = 1; render();
+      });
+
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function () { sidebar.classList.toggle('open') });
+      document.addEventListener('click', function (e) { if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open') });
+
+      render();
+
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
