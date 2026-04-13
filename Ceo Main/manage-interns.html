@@ -1,0 +1,1249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>Thinkinfo Expert Solutions â€” Manage Interns</title>
+    <link rel="icon" href="./Assets/logo.png" type="image/png">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg-0: #020608;
+            --cyan: #0ef;
+            --cyan-dim: rgba(14, 239, 255, .25);
+            --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+            --green: #00e676;
+            --green-dim: rgba(0, 230, 118, .2);
+            --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+            --red: #ff3a4a;
+            --red-dim: rgba(255, 58, 74, .25);
+            --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+            --amber: #ffaa00;
+            --amber-dim: rgba(255, 170, 0, .25);
+            --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+            --purple: #b47fff;
+            --purple-dim: rgba(180, 127, 255, .25);
+            --text: #b8d4e8;
+            --text-dim: #4e6a7d;
+            --border: rgba(14, 239, 255, .12);
+            --radius: 10px;
+            --sidebar-w: 220px
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow-x: hidden
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-0);
+            color: var(--text);
+            display: flex;
+            position: relative
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+            pointer-events: none;
+            z-index: 1000
+        }
+
+        #matrixCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: .5
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: rgba(10, 15, 24, .85);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 20;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .sidebar-title {
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #fff
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: rgba(14, 239, 255, .04);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--amber), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .92rem;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px var(--amber-dim)
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .user-name {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .user-role {
+            font-size: .68rem;
+            color: var(--text-dim);
+            margin-top: 1px
+        }
+
+        .nav {
+            padding: 8px 0
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: .82rem;
+            border-left: 3px solid transparent;
+            transition: background .2s, color .2s, border-color .2s;
+            position: relative
+        }
+
+        .nav-link svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0
+        }
+
+        .nav-link:hover {
+            background: rgba(14, 239, 255, .06);
+            color: var(--text)
+        }
+
+        .nav-link.active {
+            background: rgba(14, 239, 255, .12);
+            color: var(--cyan);
+            border-left-color: var(--cyan);
+            box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+        }
+
+        .nav-badge {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--amber);
+            color: #000;
+            font-size: .6rem;
+            font-weight: 800;
+            border-radius: 8px;
+            padding: 2px 6px;
+            animation: pulse 2s infinite
+        }
+
+        /* MAIN */
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+            z-index: 10;
+            overflow: hidden
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            padding: 0 24px;
+            flex-shrink: 0;
+            background: rgba(10, 15, 24, .85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            align-items: center;
+            justify-content: center
+        }
+
+        .menu-toggle svg {
+            width: 18px;
+            height: 18px
+        }
+
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: .5px
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .76rem
+        }
+
+        .breadcrumb-link {
+            color: var(--cyan);
+            text-decoration: none
+        }
+
+        .breadcrumb-sep,
+        .breadcrumb-current {
+            color: var(--text-dim)
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0
+        }
+
+        .search-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(10, 15, 24, .88);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            flex: 1;
+            max-width: 340px;
+            transition: border-color .2s
+        }
+
+        .search-wrap:focus-within {
+            border-color: var(--cyan-dim)
+        }
+
+        .search-wrap svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-dim);
+            flex-shrink: 0
+        }
+
+        .search-wrap input {
+            background: none;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: .82rem;
+            font-family: inherit;
+            width: 100%
+        }
+
+        .search-wrap input::placeholder {
+            color: var(--text-dim)
+        }
+
+        .filter-select {
+            background: rgba(10, 15, 24, .88);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: var(--text);
+            font-size: .8rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            transition: border-color .2s
+        }
+
+        .filter-select:focus {
+            border-color: var(--cyan-dim)
+        }
+
+        .filter-select option {
+            background: #0a0f18
+        }
+
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 18px;
+            background: linear-gradient(135deg, rgba(14, 239, 255, .2), rgba(14, 239, 255, .1));
+            border: 1px solid var(--cyan-dim);
+            border-radius: 8px;
+            color: var(--cyan);
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: none;
+            letter-spacing: .3px;
+            transition: all .2s
+        }
+
+        .btn-add:hover {
+            background: linear-gradient(135deg, rgba(14, 239, 255, .32), rgba(14, 239, 255, .18));
+            border-color: var(--cyan);
+            box-shadow: var(--cyan-glow)
+        }
+
+        .btn-add svg {
+            width: 15px;
+            height: 15px
+        }
+
+        /* STATS ROW */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px
+        }
+
+        .mini-stat {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(10, 15, 24, .88);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            transition: border-color .3s
+        }
+
+        .mini-stat:hover {
+            border-color: var(--cyan-dim)
+        }
+
+        .mini-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 6px currentColor;
+            flex-shrink: 0
+        }
+
+        .mini-dot.cyan {
+            background: var(--cyan);
+            color: var(--cyan)
+        }
+
+        .mini-dot.green {
+            background: var(--green);
+            color: var(--green)
+        }
+
+        .mini-dot.amber {
+            background: var(--amber);
+            color: var(--amber)
+        }
+
+        .mini-dot.red {
+            background: var(--red);
+            color: var(--red)
+        }
+
+        .mini-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1
+        }
+
+        .mini-lbl {
+            font-size: .68rem;
+            color: var(--text-dim);
+            margin-top: 2px
+        }
+
+        /* TABLE */
+        .table-card {
+            background: rgba(10, 15, 24, .88);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: border-color .3s
+        }
+
+        .table-card:hover {
+            border-color: rgba(14, 239, 255, .2)
+        }
+
+        .table-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 18px;
+            background: linear-gradient(90deg, rgba(14, 239, 255, .1), rgba(14, 239, 255, .03));
+            border-bottom: 1px solid var(--border)
+        }
+
+        .table-card-title {
+            font-size: .84rem;
+            font-weight: 700;
+            color: var(--cyan);
+            letter-spacing: .5px;
+            text-transform: uppercase
+        }
+
+        .table-scroll {
+            overflow-x: auto
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .8rem
+        }
+
+        thead tr {
+            background: rgba(14, 239, 255, .06);
+            border-bottom: 1px solid var(--border)
+        }
+
+        th {
+            padding: 11px 14px;
+            text-align: left;
+            color: var(--cyan);
+            font-weight: 600;
+            letter-spacing: .4px;
+            white-space: nowrap
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(14, 239, 255, .05);
+            transition: background .2s
+        }
+
+        tbody tr:hover {
+            background: rgba(14, 239, 255, .04)
+        }
+
+        td {
+            padding: 11px 14px;
+            color: var(--text);
+            white-space: nowrap
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: .68rem;
+            font-weight: 700
+        }
+
+        .badge-green {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid var(--green-dim)
+        }
+
+        .badge-amber {
+            background: var(--amber-dim);
+            color: var(--amber);
+            border: 1px solid var(--amber-dim)
+        }
+
+        .badge-red {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid var(--red-dim)
+        }
+
+        .badge-cyan {
+            background: var(--cyan-dim);
+            color: var(--cyan);
+            border: 1px solid var(--cyan-dim)
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 6px
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .action-btn svg {
+            width: 13px;
+            height: 13px
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(14, 239, 255, .1);
+            border-color: var(--cyan-dim);
+            color: var(--cyan)
+        }
+
+        .action-btn.del:hover {
+            background: rgba(255, 58, 74, .1);
+            border-color: var(--red-dim);
+            color: var(--red)
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-dim);
+            font-size: .82rem
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 8, .85);
+            backdrop-filter: blur(6px);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px
+        }
+
+        .modal-overlay.hidden {
+            display: none
+        }
+
+        .modal {
+            background: rgba(10, 15, 24, .97);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 540px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, .7)
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(90deg, rgba(14, 239, 255, .1), rgba(14, 239, 255, .03))
+        }
+
+        .modal-title {
+            font-size: .92rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 58, 74, .1);
+            border-color: var(--red-dim);
+            color: var(--red)
+        }
+
+        .modal-close svg {
+            width: 14px;
+            height: 14px
+        }
+
+        .modal-body {
+            padding: 22px
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px
+        }
+
+        .form-group.full {
+            grid-column: 1/-1
+        }
+
+        .form-label {
+            font-size: .73rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: .2px
+        }
+
+        .form-control {
+            background: rgba(15, 22, 32, .9);
+            border: 1px solid rgba(14, 239, 255, .12);
+            border-radius: 7px;
+            padding: 9px 12px;
+            color: var(--text);
+            font-size: .82rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        .form-control:focus {
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(14, 239, 255, .08)
+        }
+
+        .form-control option {
+            background: #0a0f18
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 22px;
+            border-top: 1px solid var(--border)
+        }
+
+        .btn-modal {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 20px;
+            border-radius: 7px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            border: 1px solid;
+            transition: all .2s
+        }
+
+        .btn-modal.cancel {
+            border-color: var(--border);
+            background: none;
+            color: var(--text-dim)
+        }
+
+        .btn-modal.cancel:hover {
+            border-color: var(--red-dim);
+            color: var(--red);
+            background: rgba(255, 58, 74, .08)
+        }
+
+        .btn-modal.save {
+            background: linear-gradient(135deg, rgba(14, 239, 255, .2), rgba(14, 239, 255, .1));
+            border-color: var(--cyan);
+            color: var(--cyan)
+        }
+
+        .btn-modal.save:hover {
+            border-color: var(--cyan);
+            box-shadow: var(--cyan-glow);
+            background: linear-gradient(135deg, rgba(14, 239, 255, .32), rgba(14, 239, 255, .18))
+        }
+
+        .toast-wrap {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .toast {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: .82rem;
+            font-weight: 600;
+            backdrop-filter: blur(12px);
+            border: 1px solid;
+            min-width: 260px;
+            animation: slideIn .25s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .4)
+        }
+
+        .toast.success {
+            background: rgba(0, 230, 118, .1);
+            border-color: var(--green-dim);
+            color: var(--green)
+        }
+
+        .toast.error {
+            background: rgba(255, 58, 74, .1);
+            border-color: var(--red-dim);
+            color: var(--red)
+        }
+
+        .toast.warning {
+            background: rgba(255, 170, 0, .1);
+            border-color: var(--amber-dim);
+            color: var(--amber)
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .toast.fade-out {
+            animation: fadeOut .3s ease forwards
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+        }
+
+        .footer {
+            padding: 12px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: .72rem;
+            color: var(--text-dim);
+            background: rgba(10, 15, 24, .85);
+            flex-shrink: 0
+        }
+
+        @media(max-width:900px) {
+            :root {
+                --sidebar-w: 0
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 240px;
+                transform: translateX(-100%);
+                transition: transform .3s;
+                z-index: 100
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+            }
+
+            .menu-toggle {
+                display: flex
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .modal-grid {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="matrixCanvas"></canvas>
+    <div class="toast-wrap" id="toastWrap"></div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><img src="./Assets/logo.png" alt="TES" width="36" height="36"
+                onerror="this.style.display='none'" /><span class="sidebar-title">Admin Panel</span></div>
+        <div class="user-card">
+            <div class="user-avatar">Kr</div>
+            <div class="user-info">
+                <div class="user-name">Kr., CEO</div>
+                <div class="user-role">Chief Executive Officer</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <a href="ceo-home-dashboard.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg><span>Home</span></a>
+            <a href="ceo-profile-edit.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg><span>View/Edit Profile</span></a>
+            <a href="add-manager.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="16" y1="11" x2="22" y2="11" />
+                </svg><span>Add Manager</span></a>
+            <a href="ceo-manage-managers.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg><span>Manage Manager</span></a>
+            <a href="add-employee.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="16" y1="11" x2="22" y2="11" />
+                </svg><span>Add Employee</span></a>
+            <a href="ceo-manage-employees.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg><span>Manage Employee</span></a>
+            <a href="add-division.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+                </svg><span>Add Division</span></a>
+            <a href="manage-division.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="18" height="7" />
+                </svg><span>Manage Division</span></a>
+            <a href="add-department.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg><span>Add Department</span></a>
+            <a href="manage-department.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <line x1="9" y1="22" x2="9" y2="12" />
+                    <line x1="15" y1="12" x2="15" y2="22" />
+                    <line x1="3" y1="14" x2="21" y2="14" />
+                </svg><span>Manage Department</span></a>
+            <a href="view_attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg><span>View Attendance</span></a>
+            <a href="ceo-employee-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg><span>Employee Feedback</span></a>
+            <a href="manager-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    <line x1="9" y1="10" x2="15" y2="10" />
+                </svg><span>Manager Feedback</span></a>
+            <a href="manager-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M9 8h6m-6 4h6m-6 4h4" />
+                </svg><span>Manager Leave</span></a>
+            <a href="add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <line x1="19" y1="8" x2="19" y2="14" />
+                    <line x1="16" y1="11" x2="22" y2="11" />
+                </svg><span>Add Intern</span></a>
+            <a href="manage-interns.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg><span>Manage Interns</span></a>
+            <a href="employee-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M9 8h6m-6 4h4" />
+                </svg><span>Employee Leave</span></a>
+            <a href="notify_manager.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg><span>Notify Manager</span><span class="nav-badge">2</span></a>
+            <a href="notify-employee.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    <line x1="12" y1="2" x2="12" y2="5" />
+                </svg><span>Notify Employee</span><span class="nav-badge">5</span></a>
+      <a href="notify-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/></svg><span>Notify Intern</span><span class="nav-badge">3</span></a>
+            <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg><span>Logout</span></a>
+        </nav>
+    </aside>
+
+    <div class="main-wrap">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg></button>
+                <h1 class="page-title">Manage Interns</h1>
+            </div>
+            <nav class="breadcrumb"><a href="ceo-home-dashboard.html" class="breadcrumb-link">Home</a><span
+                    class="breadcrumb-sep">/</span><span class="breadcrumb-current">Manage Interns</span></nav>
+        </header>
+
+        <main class="content">
+            <!-- STATS -->
+            <div class="stats-row">
+                <div class="mini-stat">
+                    <div class="mini-dot cyan"></div>
+                    <div>
+                        <div class="mini-val" id="sTotal">8</div>
+                        <div class="mini-lbl">Total Interns</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-dot green"></div>
+                    <div>
+                        <div class="mini-val" id="sActive">6</div>
+                        <div class="mini-lbl">Active</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-dot amber"></div>
+                    <div>
+                        <div class="mini-val" id="sCompleted">2</div>
+                        <div class="mini-lbl">Completed</div>
+                    </div>
+                </div>
+                <div class="mini-stat">
+                    <div class="mini-dot red"></div>
+                    <div>
+                        <div class="mini-val" id="sTerminated">0</div>
+                        <div class="mini-lbl">Terminated</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg><input type="text" id="searchInput" placeholder="Search by name, ID, department..." />
+                    </div>
+                    <select class="filter-select" id="filterDept">
+                        <option value="">All Departments</option>
+                        <option>IT</option>
+                        <option>Human Resources</option>
+                        <option>AWS Cloud</option>
+                        <option>Frontend Dev</option>
+                        <option>Micro Biology</option>
+                        <option>Agriculture</option>
+                    </select>
+                    <select class="filter-select" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option>Active</option>
+                        <option>Completed</option>
+                        <option>Terminated</option>
+                    </select>
+                </div>
+                <a href="add-intern.html" class="btn-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>Add Intern</a>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-card">
+                <div class="table-card-header"><span class="table-card-title">Intern Records</span><span
+                        style="font-size:.72rem;color:var(--text-dim)" id="countLabel">Showing 8 interns</span></div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>College</th>
+                                <th>Department</th>
+                                <th>Role</th>
+                                <th>Duration</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="internTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <span>Copyright &copy; <span id="yr"></span> <strong
+                    style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,.9)">Thinkinfo Expert Solutions.</strong> All
+                rights reserved.</span>
+            <span>Version 1.0</span>
+        </footer>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay hidden" id="editModal">
+        <div class="modal">
+            <div class="modal-header"><span class="modal-title">Edit Intern</span><button class="modal-close"
+                    id="modalClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg></button></div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <input type="hidden" id="editId" />
+                    <div class="form-group"><label class="form-label">First Name</label><input type="text"
+                            class="form-control" id="editFirstName" /></div>
+                    <div class="form-group"><label class="form-label">Last Name</label><input type="text"
+                            class="form-control" id="editLastName" /></div>
+                    <div class="form-group"><label class="form-label">Department</label><select class="form-control"
+                            id="editDept">
+                            <option>IT</option>
+                            <option>Human Resources</option>
+                            <option>AWS Cloud</option>
+                            <option>Frontend Dev</option>
+                            <option>Micro Biology</option>
+                            <option>Agriculture</option>
+                        </select></div>
+                    <div class="form-group"><label class="form-label">Status</label><select class="form-control"
+                            id="editStatus">
+                            <option>Active</option>
+                            <option>Completed</option>
+                            <option>Terminated</option>
+                        </select></div>
+                    <div class="form-group full"><label class="form-label">Role</label><input type="text"
+                            class="form-control" id="editRole" /></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal cancel" id="cancelEdit">Cancel</button>
+                <button class="btn-modal save" id="saveEdit">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+            document.getElementById('yr').textContent = new Date().getFullYear();
+            // Matrix
+            var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops, CH = 'ã‚¢ã‚¤ã‚¦ã‚¨ã‚ª01234ABCDEFabcdef';
+            function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1); }
+            resize(); addEventListener('resize', resize); ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+            (function loop() { ctx.fillStyle = 'rgba(2,6,8,.06)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px "Courier New"'; for (var i = 0; i < drops.length; i++) { ctx.fillStyle = 'rgba(14,239,255,.6)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], i * 18, drops[i] * 18); if (drops[i] * 18 > H && Math.random() > .975) drops[i] = 0; drops[i]++; } requestAnimationFrame(loop); })();
+            // Sidebar
+            var tog = document.getElementById('menuToggle'), sb = document.getElementById('sidebar');
+            tog && tog.addEventListener('click', function (e) { e.stopPropagation(); sb.classList.toggle('open'); });
+            document.addEventListener('click', function (e) { if (sb.classList.contains('open') && !sb.contains(e.target) && e.target !== tog) sb.classList.remove('open'); });
+            // Data
+            var interns = [
+                { id: 'INT-2026-001', fname: 'Riya', lname: 'Mehta', college: 'Anna University', dept: 'IT', role: 'Web Development Intern', duration: '3 Months', type: 'In-Office', status: 'Active' },
+                { id: 'INT-2026-002', fname: 'Arjun', lname: 'Sharma', college: 'VIT Vellore', dept: 'AWS Cloud', role: 'Cloud Infrastructure Intern', duration: '6 Months', type: 'Remote', status: 'Active' },
+                { id: 'INT-2026-003', fname: 'Shreya', lname: 'Nair', college: 'PSG Tech', dept: 'Frontend Dev', role: 'UI/UX Intern', duration: '3 Months', type: 'Hybrid', status: 'Active' },
+                { id: 'INT-2026-004', fname: 'Karan', lname: 'Patel', college: 'NIT Trichy', dept: 'Human Resources', role: 'HR Intern', duration: '2 Months', type: 'In-Office', status: 'Completed' },
+                { id: 'INT-2026-005', fname: 'Pooja', lname: 'Iyer', college: 'SRM University', dept: 'Micro Biology', role: 'Lab Research Intern', duration: '4 Months', type: 'In-Office', status: 'Active' },
+                { id: 'INT-2026-006', fname: 'Dev', lname: 'Kumar', college: 'Amrita University', dept: 'Agriculture', role: 'Field Analysis Intern', duration: '3 Months', type: 'In-Office', status: 'Active' },
+                { id: 'INT-2026-007', fname: 'Tanvi', lname: 'Roy', college: 'Manipal University', dept: 'IT', role: 'Cyber Security Intern', duration: '6 Months', type: 'Remote', status: 'Active' },
+                { id: 'INT-2026-008', fname: 'Nihal', lname: 'Verma', college: 'Bharathiar University', dept: 'Frontend Dev', role: 'React Developer Intern', duration: '3 Months', type: 'Hybrid', status: 'Completed' },
+            ];
+            var filtered = interns.slice();
+            function statusClass(s) { return s === 'Active' ? 'badge-green' : s === 'Completed' ? 'badge-cyan' : 'badge-red'; }
+            function render() {
+                var tbody = document.getElementById('internTbody'); tbody.innerHTML = '';
+                if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="9"><div class="no-results">No interns found matching your criteria.</div></td></tr>'; document.getElementById('countLabel').textContent = 'No interns found'; return; }
+                document.getElementById('countLabel').textContent = 'Showing ' + filtered.length + ' intern' + (filtered.length !== 1 ? 's' : '');
+                filtered.forEach(function (intern, i) {
+                    var tr = document.createElement('tr');
+                    tr.innerHTML = '<td style="color:var(--cyan);font-weight:600">' + intern.id + '</td><td>' + intern.fname + ' ' + intern.lname + '</td><td style="color:var(--text-dim)">' + intern.college + '</td><td>' + intern.dept + '</td><td>' + intern.role + '</td><td>' + intern.duration + '</td><td><span class="badge badge-amber">' + intern.type + '</span></td><td><span class="badge ' + statusClass(intern.status) + '">' + intern.status + '</span></td><td><div class="action-btns"><button class="action-btn edit" title="Edit" data-i="' + i + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="action-btn del" title="Delete" data-i="' + i + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button></div></td>';
+                    tbody.appendChild(tr);
+                });
+                tbody.querySelectorAll('.action-btn.edit').forEach(function (btn) { btn.addEventListener('click', function () { openEdit(parseInt(this.getAttribute('data-i'))); }); });
+                tbody.querySelectorAll('.action-btn.del').forEach(function (btn) { btn.addEventListener('click', function () { deleteIntern(parseInt(this.getAttribute('data-i'))); }); });
+            }
+            function applyFilters() {
+                var q = document.getElementById('searchInput').value.toLowerCase();
+                var dept = document.getElementById('filterDept').value;
+                var status = document.getElementById('filterStatus').value;
+                filtered = interns.filter(function (intern) {
+                    var name = (intern.fname + ' ' + intern.lname + ' ' + intern.id + ' ' + intern.dept).toLowerCase();
+                    return name.includes(q) && (dept === '' || intern.dept === dept) && (status === '' || intern.status === status);
+                });
+                updateStats(); render();
+            }
+            function updateStats() {
+                document.getElementById('sTotal').textContent = filtered.length;
+                document.getElementById('sActive').textContent = filtered.filter(function (x) { return x.status === 'Active'; }).length;
+                document.getElementById('sCompleted').textContent = filtered.filter(function (x) { return x.status === 'Completed'; }).length;
+                document.getElementById('sTerminated').textContent = filtered.filter(function (x) { return x.status === 'Terminated'; }).length;
+            }
+            document.getElementById('searchInput').addEventListener('input', applyFilters);
+            document.getElementById('filterDept').addEventListener('change', applyFilters);
+            document.getElementById('filterStatus').addEventListener('change', applyFilters);
+            // Edit Modal
+            var editingIdx = -1;
+            function openEdit(i) { editingIdx = i; var intern = filtered[i]; document.getElementById('editFirstName').value = intern.fname; document.getElementById('editLastName').value = intern.lname; document.getElementById('editDept').value = intern.dept; document.getElementById('editStatus').value = intern.status; document.getElementById('editRole').value = intern.role; document.getElementById('editModal').classList.remove('hidden'); }
+            document.getElementById('modalClose').addEventListener('click', function () { document.getElementById('editModal').classList.add('hidden'); });
+            document.getElementById('cancelEdit').addEventListener('click', function () { document.getElementById('editModal').classList.add('hidden'); });
+            document.getElementById('saveEdit').addEventListener('click', function () { if (editingIdx >= 0) { var intern = filtered[editingIdx]; intern.fname = document.getElementById('editFirstName').value; intern.lname = document.getElementById('editLastName').value; intern.dept = document.getElementById('editDept').value; intern.status = document.getElementById('editStatus').value; intern.role = document.getElementById('editRole').value; document.getElementById('editModal').classList.add('hidden'); applyFilters(); showToast('Intern updated successfully!', 'success'); } });
+            function deleteIntern(i) { if (confirm('Remove this intern from the list?')) { filtered.splice(i, 1); var orig = interns.indexOf(filtered[i]); interns = interns.filter(function (intern) { return intern !== filtered[i]; }); applyFilters(); showToast('Intern removed.', 'warning'); } }
+            function showToast(msg, type) { var w = document.getElementById('toastWrap'), t = document.createElement('div'); t.className = 'toast ' + (type || 'success'); t.textContent = msg; w.appendChild(t); setTimeout(function () { t.classList.add('fade-out'); setTimeout(function () { t.remove(); }, 300); }, 4000); }
+            render(); updateStats();
+        })();
+    </script>
+</body>
+
+</html>
