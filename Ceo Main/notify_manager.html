@@ -1,0 +1,1254 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notify Manager — Thinkinfo Expert Solutions</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #c084fc;
+      --purple-dim: rgba(192, 132, 252, .25);
+      --purple-glow: 0 0 12px rgba(192, 132, 252, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ══ SIDEBAR ══ */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim);
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px;
+      letter-spacing: .3px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .81rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, .5) }
+      50% { opacity: .85; box-shadow: 0 0 0 4px rgba(255, 170, 0, 0) }
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      transition: filter .2s
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link:hover svg {
+      filter: drop-shadow(0 0 4px var(--cyan))
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 18px rgba(14, 239, 255, .08);
+    }
+
+    .nav-link.active svg {
+      filter: drop-shadow(0 0 6px var(--cyan))
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 14px
+    }
+
+    /* ══ MAIN ══ */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, .5);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ══ NOTIFY MANAGER PAGE ══ */
+    .section-box {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .07);
+      overflow: hidden;
+    }
+
+    .section-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(15, 22, 32, .75);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-box-title {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-box-title svg {
+      width: 16px;
+      height: 16px;
+      filter: drop-shadow(0 0 5px var(--cyan))
+    }
+
+    /* ══ TABLE ══ */
+    .table-wrap {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      height: 6px
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .81rem;
+    }
+
+    thead tr {
+      background: rgba(14, 239, 255, .06);
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border-bottom: 1px solid var(--cyan-dim);
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(14, 239, 255, .05);
+      transition: background .2s;
+    }
+
+    tbody tr:hover {
+      background: rgba(14, 239, 255, .04);
+    }
+
+    tbody td {
+      padding: 14px 16px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    td.sn {
+      color: var(--text-dim);
+      font-size: .74rem;
+      font-weight: 600;
+      width: 50px;
+    }
+
+    td.name {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    td.email {
+      color: var(--cyan);
+      font-size: .78rem
+    }
+
+    td.gender .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      font-size: .7rem;
+      font-weight: 700;
+    }
+
+    td.gender .badge.M {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+    }
+
+    td.gender .badge.F {
+      background: rgba(255, 170, 0, .12);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim);
+    }
+
+    td.division .div-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+
+    .div-IT {
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim)
+    }
+
+    .div-HR {
+      background: rgba(0, 230, 118, .1);
+      color: var(--green);
+      border: 1px solid var(--green-dim)
+    }
+
+    .div-MB {
+      background: rgba(255, 170, 0, .1);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim)
+    }
+
+    td.avatar-cell .avatar-img {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-3), var(--bg-2));
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(14, 239, 255, .08);
+    }
+
+    td.avatar-cell img {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    /* ══ SEND NOTIFICATION BUTTON ══ */
+    .btn-notify {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: linear-gradient(135deg, rgba(14, 239, 255, .15), rgba(14, 239, 255, .08));
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      color: var(--cyan);
+      font-size: .76rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .4px;
+      transition: background .2s, border-color .2s, box-shadow .2s, transform .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .btn-notify svg {
+      width: 13px;
+      height: 13px;
+      flex-shrink: 0
+    }
+
+    .btn-notify:hover {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .28), rgba(14, 239, 255, .16));
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-notify:active {
+      transform: translateY(0)
+    }
+
+    .btn-notify.sending {
+      opacity: .6;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .btn-notify.sent {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .2), rgba(0, 230, 118, .1));
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: var(--green-glow);
+    }
+
+    /* ══ MODAL ══ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 8, .85);
+      backdrop-filter: blur(6px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto
+    }
+
+    .modal {
+      background: var(--bg-2);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 14px;
+      width: 480px;
+      max-width: calc(100vw - 40px);
+      box-shadow: 0 0 60px rgba(14, 239, 255, .15), 0 24px 48px rgba(0, 0, 0, .6);
+      transform: scale(.94) translateY(20px);
+      transition: transform .25s;
+      overflow: hidden;
+    }
+
+    .modal-overlay.open .modal {
+      transform: scale(1) translateY(0)
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: rgba(14, 239, 255, .05);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-title svg {
+      width: 16px;
+      height: 16px;
+      filter: drop-shadow(0 0 5px var(--cyan))
+    }
+
+    .modal-target {
+      font-size: .75rem;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: background .2s, color .2s, border-color .2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 58, 74, .1);
+      color: var(--red);
+      border-color: var(--red-dim)
+    }
+
+    .modal-body {
+      padding: 20px
+    }
+
+    .form-group {
+      margin-bottom: 16px
+    }
+
+    .form-label {
+      display: block;
+      font-size: .74rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .08);
+      background: rgba(14, 239, 255, .05);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-dim)
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 20px;
+      background: rgba(0, 0, 0, .2);
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-cancel {
+      padding: 8px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s, color .2s;
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 255, 255, .05);
+      color: var(--text)
+    }
+
+    .btn-send {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, rgba(14, 239, 255, .2), rgba(14, 239, 255, .1));
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .4px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: background .2s, border-color .2s, box-shadow .2s;
+    }
+
+    .btn-send:hover {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .3), rgba(14, 239, 255, .18));
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow);
+    }
+
+    .btn-send svg {
+      width: 14px;
+      height: 14px
+    }
+
+    /* ══ TOAST ══ */
+    .toast-wrap {
+      position: fixed;
+      bottom: 60px;
+      right: 24px;
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: rgba(10, 15, 24, .95);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      font-size: .8rem;
+      font-weight: 600;
+      box-shadow: var(--green-glow), 0 8px 24px rgba(0, 0, 0, .5);
+      animation: toastIn .3s ease forwards;
+      max-width: 280px;
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0)
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+    }
+
+    .toast.out {
+      animation: toastOut .3s ease forwards
+    }
+
+    /* ══ FOOTER ══ */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim);
+    }
+
+    .footer strong {
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(14,239,255,.8), 0 0 20px rgba(14,239,255,.4);
+      letter-spacing: .3px
+    }
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+        z-index: 100;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 28px rgba(0, 0, 0, .7)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+      <div class="logo-wrap">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="sidebar-title">Admin Panel</span>
+    </div>
+
+    <div class="user-card">
+      <div class="user-avatar">Kr</div>
+      <div class="user-info">
+        <div class="user-name">Kr., CEO</div>
+        <div class="user-role">Chief Executive Officer</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+
+      <a href="ceo-home-dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="ceo-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="add-manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Manager</span>
+      </a>
+      <a href="ceo-manage-managers.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Manager</span>
+      </a>
+      <a href="add-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Employee</span>
+      </a>
+      <a href="ceo-manage-employees.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Employee</span>
+      </a>
+      <a href="add-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <span>Add Division</span>
+      </a>
+      <a href="manage-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="18" height="7"/></svg>
+        <span>Manage Division</span>
+      </a>
+      <a href="add-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Add Department</span>
+      </a>
+      <a href="manage-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="12" x2="15" y2="22"/><line x1="3" y1="14" x2="21" y2="14"/></svg>
+        <span>Manage Department</span>
+      </a>
+      <a href="view_attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="ceo-employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Employee Feedback</span>
+      </a>
+      <a href="manager-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span>Manager Feedback</span>
+      </a>
+      <a href="manager-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg>
+        <span>Manager Leave</span>
+      </a>
+      <a href="employee-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h4"/></svg>
+        <span>Employee Leave</span>
+      </a>
+      <a href="notify_manager.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Notify Manager</span>
+        <span class="nav-badge" id="navBadgeManager">2</span>
+      </a>
+      <a href="notify-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
+        <span>Notify Employee</span>
+        <span class="nav-badge" id="navBadgeEmp">5</span>
+      </a>
+      <a href="notify-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/></svg><span>Notify Intern</span><span class="nav-badge">3</span></a>
+      <a href="add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+      </a>
+
+    </nav>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-wrap">
+
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Send Notifications To Manager</h1>
+      </div>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="ceo-home-dashboard.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Send Notifications To Manager</span>
+      </nav>
+    </header>
+
+    <main class="content">
+
+      <div class="section-box">
+        <div class="section-box-header">
+          <div class="section-box-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              <line x1="12" y1="3" x2="12" y2="1" />
+            </svg>
+            Send Notifications To Manager
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="managerTable">
+            <thead>
+              <tr>
+                <th>SN</th>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Gender</th>
+                <th>Division</th>
+                <th>Avatar</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+
+  </div>
+
+  <!-- ══ NOTIFICATION MODAL ══ -->
+  <div class="modal-overlay" id="notifyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            Send Notification
+          </div>
+          <div class="modal-target" id="modalTarget">To: —</div>
+        </div>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="notifSubject">Subject</label>
+          <input type="text" id="notifSubject" class="form-input" placeholder="Enter notification subject…" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="notifMessage">Message</label>
+          <textarea id="notifMessage" class="form-textarea"
+            placeholder="Write your notification message here…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btnCancel">Cancel</button>
+        <button class="btn-send" id="btnSend">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+          Send
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TOAST CONTAINER ══ -->
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ══ MATRIX RAIN ══ */
+      (function () {
+        var c = document.getElementById('matrixCanvas'),
+          ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオカキクケコサシスセソ0123456789ABCDEFabcdef<>{}[]|/\\';
+        function resize() {
+          W = c.width = innerWidth; H = c.height = innerHeight;
+          cols = Math.floor(W / 18); drops = new Array(cols).fill(1);
+        }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.055)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New",monospace';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18;
+            var ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.75)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.18)';
+            ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+          }
+          requestAnimationFrame(loop);
+        })();
+      })();
+
+      /* ══ DATA ══ */
+      var managers = [
+        { sn: 1, name: 'M., Manager', email: 'manager@manager.com', gender: 'M', division: 'IT' },
+        { sn: 2, name: 'Hamza, Ali', email: 'ali@ali.com', gender: 'M', division: 'Micro Biology' },
+        { sn: 3, name: 'Ahmad, Mahad', email: 'mahadncbae123@gmail.com', gender: 'M', division: 'HR' },
+        { sn: 4, name: 'Test, Pawan', email: 'pavantest@gmail.com', gender: 'M', division: 'IT' },
+        { sn: 5, name: 'Ahmad, Mahad', email: 'apokolipsu@gmail.com', gender: 'M', division: 'HR' },
+        { sn: 6, name: 'L s, F n', email: 'e@mail.com', gender: 'M', division: 'IT' },
+        { sn: 7, name: 'Pandey, Udayan', email: 'admin2@admin.com', gender: 'M', division: 'IT' },
+        { sn: 8, name: 'Sen, Manar', email: 'admin@admin55.com', gender: 'F', division: 'IT' }
+      ];
+
+      function divClass(div) {
+        if (div === 'IT') return 'div-IT';
+        if (div === 'HR') return 'div-HR';
+        return 'div-MB';
+      }
+
+      function initials(name) {
+        return name.split(',').map(function (p) { return p.trim()[0] || '' }).join('').toUpperCase().slice(0, 2);
+      }
+
+      var tbody = document.getElementById('tableBody');
+      managers.forEach(function (m) {
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="sn">' + m.sn + '</td>' +
+          '<td class="name">' + m.name + '</td>' +
+          '<td class="email">' + m.email + '</td>' +
+          '<td class="gender"><span class="badge ' + m.gender + '">' + m.gender + '</span></td>' +
+          '<td class="division"><span class="div-tag ' + divClass(m.division) + '">' + m.division + '</span></td>' +
+          '<td class="avatar-cell"><div class="avatar-img">' + initials(m.name) + '</div></td>' +
+          '<td><button class="btn-notify" data-idx="' + (m.sn - 1) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+          '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+          '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+          '</svg>' +
+          'Send Notification' +
+          '</button></td>';
+        tbody.appendChild(tr);
+      });
+
+      /* ══ MODAL ══ */
+      var modal = document.getElementById('notifyModal');
+      var modalTarget = document.getElementById('modalTarget');
+      var notifSubject = document.getElementById('notifSubject');
+      var notifMessage = document.getElementById('notifMessage');
+      var currentIdx = null;
+
+      document.getElementById('tableBody').addEventListener('click', function (e) {
+        var btn = e.target.closest('.btn-notify');
+        if (!btn || btn.classList.contains('sent')) return;
+        currentIdx = parseInt(btn.dataset.idx);
+        var m = managers[currentIdx];
+        modalTarget.textContent = 'To: ' + m.name + ' <' + m.email + '>';
+        notifSubject.value = '';
+        notifMessage.value = '';
+        modal.classList.add('open');
+      });
+
+      function closeModal() { modal.classList.remove('open'); currentIdx = null; }
+
+      document.getElementById('modalClose').addEventListener('click', closeModal);
+      document.getElementById('btnCancel').addEventListener('click', closeModal);
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+      document.getElementById('btnSend').addEventListener('click', function () {
+        if (currentIdx === null) return;
+        var subject = notifSubject.value.trim();
+        var message = notifMessage.value.trim();
+        if (!subject || !message) {
+          notifSubject.style.borderColor = !subject ? 'var(--red)' : '';
+          notifMessage.style.borderColor = !message ? 'var(--red)' : '';
+          setTimeout(function () {
+            notifSubject.style.borderColor = '';
+            notifMessage.style.borderColor = '';
+          }, 1500);
+          return;
+        }
+
+        /* Mark button as sent */
+        var btn = tbody.querySelectorAll('.btn-notify')[currentIdx];
+        btn.classList.add('sent');
+        btn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+          '<polyline points="20 6 9 17 4 12"/>' +
+          '</svg>Sent';
+
+        /* Show toast */
+        showToast('Notification sent to ' + managers[currentIdx].name);
+
+        closeModal();
+      });
+
+      /* ══ TOAST ══ */
+      function showToast(msg) {
+        var wrap = document.getElementById('toastWrap');
+        var t = document.createElement('div');
+        t.className = 'toast';
+        t.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">' +
+          '<polyline points="20 6 9 17 4 12"/>' +
+          '</svg>' + msg;
+        wrap.appendChild(t);
+        setTimeout(function () {
+          t.classList.add('out');
+          setTimeout(function () { t.remove() }, 350);
+        }, 3000);
+      }
+
+      /* ══ SIDEBAR MOBILE ══ */
+      var menuToggle = document.getElementById('menuToggle');
+      var sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function (e) {
+        e.stopPropagation(); sidebar.classList.toggle('open');
+      });
+      document.addEventListener('click', function (e) {
+        if (sidebar.classList.contains('open') &&
+          !sidebar.contains(e.target) &&
+          e.target !== menuToggle && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+      });
+
+    })();
+  </script>
+
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
