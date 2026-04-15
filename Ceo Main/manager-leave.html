@@ -1,0 +1,1096 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #c084fc;
+      --purple-dim: rgba(192, 132, 252, .25);
+      --purple-glow: 0 0 12px rgba(192, 132, 252, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px;
+      letter-spacing: .3px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .81rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, .5) }
+      50% { opacity: .85; box-shadow: 0 0 0 4px rgba(255, 170, 0, 0) }
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 14px
+    }
+
+    /* ── MAIN ── */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ── LEAVE TABLE PANEL ── */
+    .leave-panel {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .08);
+      overflow: hidden
+    }
+
+    .leave-panel-header {
+      display: flex;
+      align-items: center;
+      padding: 14px 20px;
+      background: linear-gradient(90deg, rgba(14, 239, 255, .18), rgba(14, 239, 255, .06));
+      border-bottom: 1px solid var(--border)
+    }
+
+    .leave-panel-title {
+      font-size: .85rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .leave-panel-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--cyan)
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem
+    }
+
+    thead tr {
+      background: rgba(14, 239, 255, .05);
+      border-bottom: 1px solid var(--border)
+    }
+
+    thead th {
+      padding: 12px 14px;
+      text-align: left;
+      font-size: .74rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(14, 239, 255, .05);
+      transition: background .15s
+    }
+
+    tbody tr:last-child {
+      border-bottom: none
+    }
+
+    tbody tr:hover {
+      background: rgba(14, 239, 255, .04)
+    }
+
+    tbody td {
+      padding: 12px 14px;
+      color: var(--text);
+      vertical-align: middle
+    }
+
+    .sn-cell {
+      color: var(--text-dim);
+      font-size: .78rem
+    }
+
+    .manager-cell {
+      font-weight: 600;
+      color: #fff
+    }
+
+    .division-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 600;
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid rgba(14, 239, 255, .2);
+      letter-spacing: .3px
+    }
+
+    .message-cell {
+      color: var(--text);
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .date-cell {
+      color: var(--text-dim);
+      font-size: .8rem;
+      white-space: nowrap
+    }
+
+    .submitted-cell {
+      color: var(--text-dim);
+      font-size: .78rem;
+      white-space: nowrap
+    }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: box-shadow .2s
+    }
+
+    .badge-approved {
+      background: rgba(0, 230, 118, .15);
+      color: var(--green);
+      border: 1px solid rgba(0, 230, 118, .3)
+    }
+
+    .badge-approved:hover {
+      box-shadow: var(--green-glow)
+    }
+
+    .badge-rejected {
+      background: rgba(255, 58, 74, .15);
+      color: var(--red);
+      border: 1px solid rgba(255, 58, 74, .3)
+    }
+
+    .badge-rejected:hover {
+      box-shadow: var(--red-glow)
+    }
+
+    .badge-pending {
+      background: rgba(255, 170, 0, .12);
+      color: var(--amber);
+      border: 1px solid rgba(255, 170, 0, .25)
+    }
+
+    .badge-pending:hover {
+      box-shadow: var(--amber-glow)
+    }
+
+    /* Action buttons */
+    .action-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center
+    }
+
+    .btn-action {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: .72rem;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      transition: background .2s, box-shadow .2s;
+      letter-spacing: .3px
+    }
+
+    .btn-approve {
+      color: var(--green);
+      border-color: rgba(0, 230, 118, .3)
+    }
+
+    .btn-approve:hover {
+      background: rgba(0, 230, 118, .12);
+      box-shadow: var(--green-glow)
+    }
+
+    .btn-reject {
+      color: var(--red);
+      border-color: rgba(255, 58, 74, .3)
+    }
+
+    .btn-reject:hover {
+      background: rgba(255, 58, 74, .12);
+      box-shadow: var(--red-glow)
+    }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 8, .8);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center
+    }
+
+    .modal-overlay.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      min-width: 340px;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, .7), var(--cyan-glow);
+      position: relative
+    }
+
+    .modal-title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .modal-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--cyan)
+    }
+
+    .modal-field {
+      margin-bottom: 14px
+    }
+
+    .modal-label {
+      font-size: .74rem;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+      letter-spacing: .4px
+    }
+
+    .modal-value {
+      font-size: .88rem;
+      color: var(--text)
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 22px
+    }
+
+    .modal-btn {
+      padding: 8px 22px;
+      border-radius: 6px;
+      font-size: .8rem;
+      font-weight: 600;
+      border: 1px solid;
+      cursor: pointer;
+      background: none;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .modal-btn-approve {
+      color: var(--green);
+      border-color: rgba(0, 230, 118, .35)
+    }
+
+    .modal-btn-approve:hover {
+      background: rgba(0, 230, 118, .14);
+      box-shadow: var(--green-glow)
+    }
+
+    .modal-btn-reject {
+      color: var(--red);
+      border-color: rgba(255, 58, 74, .35)
+    }
+
+    .modal-btn-reject:hover {
+      background: rgba(255, 58, 74, .14);
+      box-shadow: var(--red-glow)
+    }
+
+    .modal-btn-close {
+      color: var(--text-dim);
+      border-color: var(--border)
+    }
+
+    .modal-btn-close:hover {
+      background: rgba(255, 255, 255, .05);
+      color: var(--text)
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    /* ── SEARCH BAR ── */
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+      flex-wrap: wrap
+    }
+
+    .search-wrap {
+      position: relative;
+      display: flex;
+      align-items: center
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      width: 15px;
+      height: 15px;
+      color: var(--text-dim);
+      pointer-events: none
+    }
+
+    .search-input {
+      background: rgba(14, 239, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px 7px 32px;
+      color: var(--text);
+      font-size: .8rem;
+      outline: none;
+      width: 220px;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .search-input::placeholder {
+      color: var(--text-dim)
+    }
+
+    .search-input:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 8px rgba(14, 239, 255, .15)
+    }
+
+    .row-count {
+      font-size: .76rem;
+      color: var(--text-dim)
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .message-cell {
+        max-width: 180px
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-wrap">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="sidebar-title">Admin Panel</span>
+    </div>
+
+    <div class="user-card">
+      <div class="user-avatar">Kr</div>
+      <div class="user-info">
+        <div class="user-name">Kr., CEO</div>
+        <div class="user-role">Chief Executive Officer</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="ceo-home-dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="ceo-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="add-manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Manager</span>
+      </a>
+      <a href="ceo-manage-managers.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Manager</span>
+      </a>
+      <a href="add-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Employee</span>
+      </a>
+      <a href="ceo-manage-employees.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Employee</span>
+      </a>
+      <a href="add-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <span>Add Division</span>
+      </a>
+      <a href="manage-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="18" height="7"/></svg>
+        <span>Manage Division</span>
+      </a>
+      <a href="add-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Add Department</span>
+      </a>
+      <a href="manage-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="12" x2="15" y2="22"/><line x1="3" y1="14" x2="21" y2="14"/></svg>
+        <span>Manage Department</span>
+      </a>
+      <a href="view_attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="ceo-employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Employee Feedback</span>
+      </a>
+      <a href="manager-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span>Manager Feedback</span>
+      </a>
+      <a href="manager-leave.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg>
+        <span>Manager Leave</span>
+      </a>
+      <a href="add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="employee-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h4"/></svg>
+        <span>Employee Leave</span>
+      </a>
+      <a href="notify_manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Notify Manager</span>
+        <span class="nav-badge" id="navBadgeManager">2</span>
+      </a>
+      <a href="notify-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
+        <span>Notify Employee</span>
+        <span class="nav-badge" id="navBadgeEmp">5</span>
+      </a>
+      <a href="notify-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/></svg><span>Notify Intern</span><span class="nav-badge">3</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Leave Applications From Manager</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="ceo-home-dashboard.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Leave Applications From Manager</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="leave-panel">
+        <div class="leave-panel-header">
+          <div class="leave-panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 8h6m-6 4h6m-6 4h4" />
+              <line x1="18" y1="9" x2="21" y2="6" />
+              <line x1="18" y1="6" x2="21" y2="9" />
+            </svg>
+            Leave Applications From Manager
+          </div>
+        </div>
+
+        <div class="table-toolbar">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input class="search-input" id="searchInput" type="text" placeholder="Search applications…"
+              oninput="filterTable()" />
+          </div>
+          <span class="row-count" id="rowCount">10 records</span>
+        </div>
+
+        <div class="table-wrap">
+          <table id="leaveTable">
+            <thead>
+              <tr>
+                <th>SN</th>
+                <th>Manager</th>
+                <th>Division</th>
+                <th>Message</th>
+                <th>Leave Date</th>
+                <th>Submitted On</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <!-- ── DETAIL MODAL ── -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        Leave Application Detail
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">MANAGER</div>
+        <div class="modal-value" id="m-manager"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">DIVISION</div>
+        <div class="modal-value" id="m-division"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">MESSAGE</div>
+        <div class="modal-value" id="m-message"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">LEAVE DATE</div>
+        <div class="modal-value" id="m-date"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">SUBMITTED ON</div>
+        <div class="modal-value" id="m-submitted"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">STATUS</div>
+        <div class="modal-value" id="m-status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-reject" id="modalRejectBtn">Reject</button>
+        <button class="modal-btn modal-btn-approve" id="modalApproveBtn">Approve</button>
+        <button class="modal-btn modal-btn-close" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ── Matrix Rain ── */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Data ── */
+      var leaveData = [
+        { id: 1, manager: 'M. Manager', division: 'IT', message: 'Hgg', leaveDate: '2024-04-26', submittedOn: 'April 23, 2024, 2:08 p.m.', status: 'Approved' },
+        { id: 2, manager: 'M. Manager', division: 'IT', message: 'i want a leave because of an urgent work at home', leaveDate: '2024-05-28', submittedOn: 'May 26, 2024, 7:11 p.m.', status: 'Rejected' },
+        { id: 3, manager: 'M. Manager', division: 'IT', message: 'i have some work at home so i request fof a leave of one day', leaveDate: '2024-06-20', submittedOn: 'May 31, 2024, 8:20 a.m.', status: 'Approved' },
+        { id: 4, manager: 'M. Manager', division: 'IT', message: 'i think i deserve a leave sir', leaveDate: '2024-07-24', submittedOn: 'July 24, 2024, 6:05 p.m.', status: 'Rejected' },
+        { id: 5, manager: 'M. Manager', division: 'IT', message: 'i have some work at home so i request fof a leave of 2 day', leaveDate: '2024-06-16', submittedOn: 'June 15, 2024, 9:45 a.m.', status: 'Approved' },
+        { id: 6, manager: 'L s F n', division: 'IT', message: ';rac', leaveDate: '2025-04-20', submittedOn: 'April 20, 2025, 3:11 a.m.', status: 'Approved' },
+        { id: 7, manager: 'M. Manager', division: 'IT', message: 'sick leave', leaveDate: '2025-04-29', submittedOn: 'May 16, 2025, 8:58 a.m.', status: 'Approved' },
+        { id: 8, manager: 'M. Manager', division: 'IT', message: 'can I take a leave', leaveDate: '2025-07-21', submittedOn: 'July 21, 2025, 7:36 a.m.', status: 'Approved' },
+        { id: 9, manager: 'M. Manager', division: 'IT', message: 'abc/abc', leaveDate: '2025-04-30', submittedOn: 'May 16, 2025, 8:56 a.m.', status: 'Rejected' },
+        { id: 10, manager: 'M. Manager', division: 'IT', message: 'xmas', leaveDate: '2025-12-25', submittedOn: 'Sept. 23, 2025, 11:36 a.m.', status: 'Approved' }
+      ];
+
+      var currentRowIdx = null;
+
+      function statusClass(s) {
+        if (s === 'Approved') return 'badge-approved';
+        if (s === 'Rejected') return 'badge-rejected';
+        return 'badge-pending';
+      }
+
+      function renderTable(data) {
+        var tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        data.forEach(function (row, idx) {
+          var tr = document.createElement('tr');
+          tr.innerHTML =
+            '<td class="sn-cell">' + row.id + '</td>' +
+            '<td class="manager-cell">' + row.manager + '</td>' +
+            '<td><span class="division-badge">' + row.division + '</span></td>' +
+            '<td class="message-cell" title="' + row.message + '">' + row.message + '</td>' +
+            '<td class="date-cell">' + row.leaveDate + '</td>' +
+            '<td class="submitted-cell">' + row.submittedOn + '</td>' +
+            '<td><span class="badge ' + statusClass(row.status) + '" onclick="openModal(' + idx + ')">' + row.status + '</span></td>';
+          tbody.appendChild(tr);
+        });
+        document.getElementById('rowCount').textContent = data.length + ' record' + (data.length !== 1 ? 's' : '');
+      }
+
+      var filteredData = leaveData.slice();
+
+      function filterTable() {
+        var q = document.getElementById('searchInput').value.toLowerCase();
+        filteredData = leaveData.filter(function (r) {
+          return (r.manager + r.division + r.message + r.leaveDate + r.submittedOn + r.status).toLowerCase().indexOf(q) > -1;
+        });
+        renderTable(filteredData);
+      }
+
+      function openModal(idx) {
+        currentRowIdx = idx;
+        var row = filteredData[idx];
+        document.getElementById('m-manager').textContent = row.manager;
+        document.getElementById('m-division').textContent = row.division;
+        document.getElementById('m-message').textContent = row.message;
+        document.getElementById('m-date').textContent = row.leaveDate;
+        document.getElementById('m-submitted').textContent = row.submittedOn;
+        var sEl = document.getElementById('m-status');
+        sEl.innerHTML = '<span class="badge ' + statusClass(row.status) + '">' + row.status + '</span>';
+        document.getElementById('modalApproveBtn').style.display = row.status === 'Approved' ? 'none' : '';
+        document.getElementById('modalRejectBtn').style.display = row.status === 'Rejected' ? 'none' : '';
+        document.getElementById('detailModal').classList.add('open');
+      }
+
+      window.openModal = openModal;
+
+      window.closeModal = function () {
+        document.getElementById('detailModal').classList.remove('open');
+        currentRowIdx = null;
+      };
+
+      function setStatus(status) {
+        if (currentRowIdx === null) return;
+        filteredData[currentRowIdx].status = status;
+        // update in main array
+        var orig = leaveData.find(function (r) { return r.id === filteredData[currentRowIdx].id; });
+        if (orig) orig.status = status;
+        renderTable(filteredData);
+        window.closeModal();
+      }
+
+      document.getElementById('modalApproveBtn').addEventListener('click', function () { setStatus('Approved'); });
+      document.getElementById('modalRejectBtn').addEventListener('click', function () { setStatus('Rejected'); });
+
+      // Close modal on overlay click
+      document.getElementById('detailModal').addEventListener('click', function (e) {
+        if (e.target === this) window.closeModal();
+      });
+
+      /* ── Sidebar Toggle ── */
+      var menuToggle = document.getElementById('menuToggle');
+      var sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) {
+        if (!sidebar.contains(e.target) && menuToggle && !menuToggle.contains(e.target)) sidebar.classList.remove('open');
+      });
+
+      /* ── Init ── */
+      renderTable(leaveData);
+
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
