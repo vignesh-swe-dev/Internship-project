@@ -1,0 +1,1351 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Attendance — Thinkinfo Expert Solutions</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #c084fc;
+      --purple-dim: rgba(192, 132, 252, .25);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: #fff;
+      white-space: nowrap
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px;
+      letter-spacing: .3px
+    }
+
+    .nav {
+      padding: 8px 0;
+      flex: 1
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 170, 0, .5) }
+      50% { opacity: .85; box-shadow: 0 0 0 4px rgba(255, 170, 0, 0) }
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .81rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .nav-link svg {
+      width: 17px;
+      height: 17px;
+      flex-shrink: 0;
+      transition: filter .2s
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link:hover svg {
+      filter: drop-shadow(0 0 4px var(--cyan))
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 18px rgba(14, 239, 255, .08)
+    }
+
+    .nav-link.active svg {
+      filter: drop-shadow(0 0 6px var(--cyan))
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 14px
+    }
+
+    /* MAIN */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, .5)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* SUMMARY CARDS */
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px
+    }
+
+    .sum-card {
+      background: rgba(15, 22, 32, .92);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color .3s, box-shadow .3s, transform .2s;
+      cursor: default
+    }
+
+    .sum-card:hover {
+      transform: translateY(-2px)
+    }
+
+    .sum-card.cyan {
+      border-color: var(--cyan-dim)
+    }
+
+    .sum-card.cyan:hover {
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .sum-card.green {
+      border-color: var(--green-dim)
+    }
+
+    .sum-card.green:hover {
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .sum-card.red {
+      border-color: var(--red-dim)
+    }
+
+    .sum-card.red:hover {
+      border-color: var(--red);
+      box-shadow: var(--red-glow)
+    }
+
+    .sum-card.amber {
+      border-color: var(--amber-dim)
+    }
+
+    .sum-card.amber:hover {
+      border-color: var(--amber);
+      box-shadow: var(--amber-glow)
+    }
+
+    .sum-card.purple {
+      border-color: var(--purple-dim)
+    }
+
+    .sum-card.purple:hover {
+      border-color: var(--purple);
+      box-shadow: 0 0 12px rgba(180, 127, 255, .3)
+    }
+
+    .sum-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .sum-card.cyan .sum-icon {
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan)
+    }
+
+    .sum-card.green .sum-icon {
+      background: rgba(0, 230, 118, .1);
+      color: var(--green)
+    }
+
+    .sum-card.red .sum-icon {
+      background: rgba(255, 58, 74, .1);
+      color: var(--red)
+    }
+
+    .sum-card.amber .sum-icon {
+      background: rgba(255, 170, 0, .1);
+      color: var(--amber)
+    }
+
+    .sum-card.purple .sum-icon {
+      background: rgba(180, 127, 255, .1);
+      color: var(--purple)
+    }
+
+    .sum-icon svg {
+      width: 22px;
+      height: 22px
+    }
+
+    .sum-val {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1
+    }
+
+    .sum-label {
+      font-size: .72rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      letter-spacing: .3px
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap
+    }
+
+    .toolbar-left {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .filter-label {
+      font-size: .74rem;
+      color: var(--text-dim);
+      white-space: nowrap
+    }
+
+    .filter-select,
+    .filter-input {
+      background: rgba(14, 239, 255, .04);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px;
+      color: var(--text);
+      font-size: .78rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      cursor: pointer
+    }
+
+    .filter-select:focus,
+    .filter-input:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07)
+    }
+
+    .filter-select option {
+      background: var(--bg-2)
+    }
+
+    .filter-input {
+      width: 190px
+    }
+
+    .filter-input::placeholder {
+      color: var(--text-dim)
+    }
+
+    .btn-export {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: linear-gradient(135deg, rgba(0, 230, 118, .15), rgba(0, 230, 118, .07));
+      border: 1px solid var(--green-dim);
+      border-radius: 6px;
+      color: var(--green);
+      font-size: .76rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .3px;
+      transition: background .2s, border-color .2s, box-shadow .2s
+    }
+
+    .btn-export svg {
+      width: 13px;
+      height: 13px
+    }
+
+    .btn-export:hover {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .25), rgba(0, 230, 118, .14));
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    /* SECTION BOX */
+    .section-box {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .07);
+      overflow: hidden
+    }
+
+    .section-box-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(15, 22, 32, .75);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .section-box-title {
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .section-box-title svg {
+      width: 16px;
+      height: 16px;
+      filter: drop-shadow(0 0 5px var(--cyan))
+    }
+
+    .record-count {
+      font-size: .72rem;
+      color: var(--text-dim)
+    }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      height: 6px
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .81rem
+    }
+
+    thead tr {
+      background: rgba(14, 239, 255, .06)
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border-bottom: 1px solid var(--cyan-dim);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color .2s
+    }
+
+    thead th:hover {
+      color: #fff
+    }
+
+    thead th em {
+      margin-left: 4px;
+      opacity: .4;
+      font-style: normal
+    }
+
+    thead th.sorted em {
+      opacity: 1
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(14, 239, 255, .04);
+      transition: background .2s;
+      animation: rowIn .3s ease both
+    }
+
+    tbody tr:hover {
+      background: rgba(14, 239, 255, .04)
+    }
+
+    @keyframes rowIn {
+      from {
+        opacity: 0;
+        transform: translateX(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    tbody td {
+      padding: 13px 16px;
+      color: var(--text);
+      vertical-align: middle
+    }
+
+    td.sn {
+      color: var(--text-dim);
+      font-size: .72rem;
+      font-weight: 600;
+      width: 48px
+    }
+
+    td.emp-name {
+      font-weight: 600;
+      color: #fff
+    }
+
+    td.emp-id {
+      font-size: .74rem;
+      color: var(--cyan);
+      font-family: 'Courier New', monospace
+    }
+
+    td.department .dept-tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .3px;
+      white-space: nowrap
+    }
+
+    .dept-FE {
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim)
+    }
+
+    .dept-SA {
+      background: rgba(255, 170, 0, .1);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim)
+    }
+
+    .dept-HR {
+      background: rgba(0, 230, 118, .1);
+      color: var(--green);
+      border: 1px solid var(--green-dim)
+    }
+
+    .dept-IT {
+      background: rgba(180, 127, 255, .1);
+      color: var(--purple);
+      border: 1px solid var(--purple-dim)
+    }
+
+    .dept-MB {
+      background: rgba(255, 58, 74, .1);
+      color: var(--red);
+      border: 1px solid var(--red-dim)
+    }
+
+    td.date-cell {
+      font-size: .78rem;
+      color: var(--text-dim);
+      white-space: nowrap
+    }
+
+    td.time-cell {
+      font-size: .78rem;
+      font-family: 'Courier New', monospace
+    }
+
+    td.hours-cell {
+      font-size: .8rem;
+      font-weight: 600;
+      text-align: center
+    }
+
+    .hours-bar-wrap {
+      margin-top: 4px;
+      height: 3px;
+      background: rgba(255, 255, 255, .07);
+      border-radius: 2px;
+      overflow: hidden
+    }
+
+    .hours-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width .6s ease
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .4px
+    }
+
+    .status-badge.present {
+      background: rgba(0, 230, 118, .12);
+      color: var(--green);
+      border: 1px solid var(--green-dim)
+    }
+
+    .status-badge.absent {
+      background: rgba(255, 58, 74, .12);
+      color: var(--red);
+      border: 1px solid var(--red-dim)
+    }
+
+    .status-badge.late {
+      background: rgba(255, 170, 0, .12);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim)
+    }
+
+    .status-badge.half {
+      background: rgba(180, 127, 255, .12);
+      color: var(--purple);
+      border: 1px solid var(--purple-dim)
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0
+    }
+
+    /* PAGINATION */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border);
+      font-size: .76rem;
+      color: var(--text-dim);
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 6px
+    }
+
+    .page-btn {
+      min-width: 30px;
+      height: 30px;
+      padding: 0 8px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-dim);
+      font-size: .76rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s, color .2s, border-color .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .page-btn:hover {
+      background: rgba(14, 239, 255, .07);
+      color: var(--text)
+    }
+
+    .page-btn.active {
+      background: rgba(14, 239, 255, .14);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .page-btn:disabled {
+      opacity: .3;
+      cursor: default
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    .footer strong {
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(14,239,255,.8), 0 0 20px rgba(14,239,255,.4);
+      letter-spacing: .3px
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s ease;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 28px rgba(0, 0, 0, .7)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .summary-cards {
+        grid-template-columns: repeat(2, 1fr)
+      }
+    }
+
+    @media(max-width:520px) {
+      .summary-cards {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-wrap">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="sidebar-title">Admin Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">Kr.</div>
+      <div class="user-info">
+        <div class="user-name">Kr., CEO</div>
+        <div class="user-role">Chief Executive Officer</div>
+      </div>
+    </div>
+    <nav class="nav">    <a href="ceo-home-dashboard.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Home</span>
+      </a>
+      <a href="ceo-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="add-manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Manager</span>
+      </a>
+      <a href="ceo-manage-managers.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Manager</span>
+      </a>
+      <a href="add-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+        <span>Add Employee</span>
+      </a>
+      <a href="ceo-manage-employees.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Manage Employee</span>
+      </a>
+      <a href="add-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        <span>Add Division</span>
+      </a>
+      <a href="manage-division.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="18" height="7"/></svg>
+        <span>Manage Division</span>
+      </a>
+      <a href="add-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Add Department</span>
+      </a>
+      <a href="manage-department.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="12" x2="15" y2="22"/><line x1="3" y1="14" x2="21" y2="14"/></svg>
+        <span>Manage Department</span>
+      </a>
+      <a href="view_attendance.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="ceo-employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Employee Feedback</span>
+      </a>
+      <a href="manager-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
+        <span>Manager Feedback</span>
+      </a>
+      <a href="manager-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg>
+        <span>Manager Leave</span>
+      </a>
+      <a href="add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="employee-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h4"/></svg>
+        <span>Employee Leave</span>
+      </a>
+      <a href="notify_manager.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Notify Manager</span>
+        <span class="nav-badge" id="navBadgeManager">2</span>
+      </a>
+      <a href="notify-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="12" y1="2" x2="12" y2="5"/></svg>
+        <span>Notify Employee</span>
+        <span class="nav-badge" id="navBadgeEmp">5</span>
+      </a>
+      <a href="notify-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/></svg><span>Notify Intern</span><span class="nav-badge">3</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg></button>
+        <h1 class="page-title">View Attendance</h1>
+      </div>
+      <nav class="breadcrumb">
+        <a href="ceo-home-dashboard.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">View Attendance</span>
+      </nav>
+    </header>
+
+    <main class="content">
+      <!-- SUMMARY CARDS -->
+      <div class="summary-cards">
+        <div class="sum-card cyan">
+          <div class="sum-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg></div>
+          <div>
+            <div class="sum-val" id="sc-total">0</div>
+            <div class="sum-label">Total Records</div>
+          </div>
+        </div>
+        <div class="sum-card green">
+          <div class="sum-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg></div>
+          <div>
+            <div class="sum-val" id="sc-present">0</div>
+            <div class="sum-label">Present</div>
+          </div>
+        </div>
+        <div class="sum-card red">
+          <div class="sum-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg></div>
+          <div>
+            <div class="sum-val" id="sc-absent">0</div>
+            <div class="sum-label">Absent</div>
+          </div>
+        </div>
+        <div class="sum-card amber">
+          <div class="sum-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg></div>
+          <div>
+            <div class="sum-val" id="sc-late">0</div>
+            <div class="sum-label">Late</div>
+          </div>
+        </div>
+        <div class="sum-card purple">
+          <div class="sum-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg></div>
+          <div>
+            <div class="sum-val" id="sc-half">0</div>
+            <div class="sum-label">Half Day</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="filter-group">
+            <span class="filter-label">Month:</span>
+            <select class="filter-select" id="filterMonth">
+              <option value="all">All</option>
+              <option value="2" selected>February</option>
+              <option value="1">January</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Dept:</span>
+            <select class="filter-select" id="filterDept">
+              <option value="all">All</option>
+              <option value="Frontend">Frontend</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">HR</option>
+              <option value="IT">IT</option>
+              <option value="Micro Biology">Micro Biology</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Status:</span>
+            <select class="filter-select" id="filterStatus">
+              <option value="all">All</option>
+              <option value="present">Present</option>
+              <option value="absent">Absent</option>
+              <option value="late">Late</option>
+              <option value="half">Half Day</option>
+            </select>
+          </div>
+          <input type="text" class="filter-input" id="searchInput" placeholder="Search employee…" />
+        </div>
+        <button class="btn-export" id="btnExport">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- TABLE -->
+      <div class="section-box">
+        <div class="section-box-header">
+          <div class="section-box-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            Attendance Records
+          </div>
+          <span class="record-count" id="recordCount">— records</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-col="sn">SN <em>↕</em></th>
+                <th data-col="empId">Emp ID <em>↕</em></th>
+                <th data-col="name">Full Name <em>↕</em></th>
+                <th data-col="dept">Department <em>↕</em></th>
+                <th data-col="date">Date <em>↕</em></th>
+                <th data-col="timeIn">Time In <em>↕</em></th>
+                <th data-col="timeOut">Time Out <em>↕</em></th>
+                <th data-col="hours">Hours <em>↕</em></th>
+                <th data-col="status">Status <em>↕</em></th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="pageInfo">Showing 0 of 0</span>
+          <div class="page-btns" id="pageBtns"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* MATRIX */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオカキクケコ0123456789ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1); }
+        resize(); addEventListener('resize', resize); ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.055)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px "Courier New",monospace';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.75)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.18)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > 0.975) drops[i] = 0; drops[i]++;
+          }
+          requestAnimationFrame(loop);
+        })();
+      })();
+
+      /* DATA */
+      var deptClass = { 'Frontend': 'dept-FE', 'Sales': 'dept-SA', 'HR': 'dept-HR', 'IT': 'dept-IT', 'Micro Biology': 'dept-MB' };
+      var statusMeta = { present: { cls: 'present', label: 'Present' }, absent: { cls: 'absent', label: 'Absent' }, late: { cls: 'late', label: 'Late' }, half: { cls: 'half', label: 'Half Day' } };
+
+      var rawData = [
+        { empId: 'EMP001', name: 'M., Manager', dept: 'IT', date: '2026-02-24', timeIn: '09:02', timeOut: '17:05', hours: 8.0, status: 'present' },
+        { empId: 'EMP002', name: 'Hamza, Ali', dept: 'Micro Biology', date: '2026-02-24', timeIn: '09:45', timeOut: '17:00', hours: 7.2, status: 'late' },
+        { empId: 'EMP003', name: 'Ahmad, Mahad', dept: 'HR', date: '2026-02-24', timeIn: '08:55', timeOut: '17:00', hours: 8.1, status: 'present' },
+        { empId: 'EMP004', name: 'Test, Pawan', dept: 'IT', date: '2026-02-24', timeIn: '—', timeOut: '—', hours: 0, status: 'absent' },
+        { empId: 'EMP005', name: 'Ahmad, Mahad', dept: 'HR', date: '2026-02-24', timeIn: '09:01', timeOut: '13:00', hours: 4.0, status: 'half' },
+        { empId: 'EMP006', name: 'L s, F n', dept: 'IT', date: '2026-02-24', timeIn: '09:00', timeOut: '17:00', hours: 8.0, status: 'present' },
+        { empId: 'EMP007', name: 'Pandey, Udayan', dept: 'IT', date: '2026-02-24', timeIn: '09:15', timeOut: '17:10', hours: 7.9, status: 'present' },
+        { empId: 'EMP008', name: 'Sen, Manar', dept: 'IT', date: '2026-02-24', timeIn: '—', timeOut: '—', hours: 0, status: 'absent' },
+        { empId: 'EMP009', name: 'Raza, Kamil', dept: 'Frontend', date: '2026-02-24', timeIn: '08:50', timeOut: '17:05', hours: 8.2, status: 'present' },
+        { empId: 'EMP010', name: 'Nguyen, Linh', dept: 'Sales', date: '2026-02-24', timeIn: '10:05', timeOut: '17:00', hours: 6.9, status: 'late' },
+        { empId: 'EMP011', name: 'Torres, Maria', dept: 'Frontend', date: '2026-02-24', timeIn: '09:00', timeOut: '17:00', hours: 8.0, status: 'present' },
+        { empId: 'EMP012', name: 'Okafor, Bisi', dept: 'Sales', date: '2026-02-24', timeIn: '09:02', timeOut: '17:00', hours: 8.0, status: 'present' },
+        { empId: 'EMP001', name: 'M., Manager', dept: 'IT', date: '2026-02-23', timeIn: '09:00', timeOut: '17:00', hours: 8.0, status: 'present' },
+        { empId: 'EMP002', name: 'Hamza, Ali', dept: 'Micro Biology', date: '2026-02-23', timeIn: '—', timeOut: '—', hours: 0, status: 'absent' },
+        { empId: 'EMP003', name: 'Ahmad, Mahad', dept: 'HR', date: '2026-02-23', timeIn: '09:05', timeOut: '13:00', hours: 4.0, status: 'half' },
+        { empId: 'EMP004', name: 'Test, Pawan', dept: 'IT', date: '2026-02-23', timeIn: '09:00', timeOut: '17:05', hours: 8.1, status: 'present' },
+        { empId: 'EMP005', name: 'Ahmad, Mahad', dept: 'HR', date: '2026-02-23', timeIn: '09:55', timeOut: '17:00', hours: 7.1, status: 'late' },
+        { empId: 'EMP006', name: 'L s, F n', dept: 'IT', date: '2026-02-23', timeIn: '09:00', timeOut: '17:00', hours: 8.0, status: 'present' },
+        { empId: 'EMP007', name: 'Pandey, Udayan', dept: 'IT', date: '2026-02-23', timeIn: '—', timeOut: '—', hours: 0, status: 'absent' },
+        { empId: 'EMP008', name: 'Sen, Manar', dept: 'IT', date: '2026-02-23', timeIn: '09:00', timeOut: '17:00', hours: 8.0, status: 'present' },
+      ].map(function (r, i) { r.sn = i + 1; return r; });
+
+      var filtered = rawData.slice(), sortCol = 'date', sortDir = -1, PAGE_SIZE = 10, page = 1;
+
+      function applyFilters() {
+        var month = document.getElementById('filterMonth').value;
+        var dept = document.getElementById('filterDept').value;
+        var stat = document.getElementById('filterStatus').value;
+        var q = document.getElementById('searchInput').value.toLowerCase();
+        filtered = rawData.filter(function (r) {
+          if (month !== 'all' && parseInt(r.date.split('-')[1]) !== parseInt(month)) return false;
+          if (dept !== 'all' && r.dept !== dept) return false;
+          if (stat !== 'all' && r.status !== stat) return false;
+          if (q && !(r.name.toLowerCase().includes(q) || r.empId.toLowerCase().includes(q))) return false;
+          return true;
+        });
+        filtered.sort(function (a, b) { var av = a[sortCol], bv = b[sortCol]; return av < bv ? -sortDir : av > bv ? sortDir : 0; });
+        page = 1; updateSummary(); renderTable();
+      }
+
+      function updateSummary() {
+        var tot = filtered.length, pre = 0, abs = 0, lat = 0, hlf = 0;
+        filtered.forEach(function (r) { if (r.status === 'present') pre++; else if (r.status === 'absent') abs++; else if (r.status === 'late') lat++; else if (r.status === 'half') hlf++; });
+        anim('sc-total', tot); anim('sc-present', pre); anim('sc-absent', abs); anim('sc-late', lat); anim('sc-half', hlf);
+      }
+      function anim(id, end) {
+        var el = document.getElementById(id), start = parseInt(el.textContent) || 0, t = null;
+        requestAnimationFrame(function step(ts) {
+          if (!t) t = ts; var p = Math.min((ts - t) / 500, 1), e = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(start + (end - start) * e); if (p < 1) requestAnimationFrame(step);
+        });
+      }
+
+      function renderTable() {
+        var tbody = document.getElementById('tableBody');
+        var total = filtered.length, pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+        if (page > pages) page = pages;
+        var start = (page - 1) * PAGE_SIZE, end = Math.min(start + PAGE_SIZE, total), slice = filtered.slice(start, end);
+        document.getElementById('recordCount').textContent = total + ' record' + (total !== 1 ? 's' : '');
+        document.getElementById('pageInfo').textContent = 'Showing ' + (total === 0 ? 0 : start + 1) + '–' + end + ' of ' + total;
+        tbody.innerHTML = '';
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        slice.forEach(function (r, i) {
+          var sm = statusMeta[r.status] || statusMeta.present;
+          var dc = deptClass[r.dept] || 'dept-IT';
+          var barW = r.hours > 0 ? Math.round((r.hours / 10) * 100) + '%' : '0%';
+          var barC = r.status === 'present' ? 'var(--green)' : r.status === 'late' ? 'var(--amber)' : r.status === 'half' ? 'var(--purple)' : 'var(--red)';
+          var dp = r.date.split('-'); var fd = months[parseInt(dp[1]) - 1] + ' ' + parseInt(dp[2]) + ', ' + dp[0];
+          var tr = document.createElement('tr'); tr.style.animationDelay = (i * 35) + 'ms';
+          tr.innerHTML = '<td class="sn">' + (start + i + 1) + '</td>' +
+            '<td class="emp-id">' + r.empId + '</td>' +
+            '<td class="emp-name">' + r.name + '</td>' +
+            '<td class="department"><span class="dept-tag ' + dc + '">' + r.dept + '</span></td>' +
+            '<td class="date-cell">' + fd + '</td>' +
+            '<td class="time-cell">' + r.timeIn + '</td>' +
+            '<td class="time-cell">' + r.timeOut + '</td>' +
+            '<td class="hours-cell"><div>' + (r.hours > 0 ? r.hours.toFixed(1) + 'h' : '—') + '</div>' +
+            '<div class="hours-bar-wrap"><div class="hours-bar" style="width:' + barW + ';background:' + barC + '"></div></div></td>' +
+            '<td><span class="status-badge ' + sm.cls + '"><span class="status-dot"></span>' + sm.label + '</span></td>';
+          tbody.appendChild(tr);
+        });
+        renderPagination(pages);
+      }
+
+      function renderPagination(pages) {
+        var wrap = document.getElementById('pageBtns'); wrap.innerHTML = '';
+        var prev = document.createElement('button'); prev.className = 'page-btn'; prev.textContent = '‹'; prev.disabled = page <= 1;
+        prev.onclick = function () { page--; renderTable(); }; wrap.appendChild(prev);
+        for (var i = 1; i <= pages; i++) {
+          (function (pg) {
+            var b = document.createElement('button');
+            b.className = 'page-btn' + (pg === page ? ' active' : ''); b.textContent = pg;
+            b.onclick = function () { page = pg; renderTable(); }; wrap.appendChild(b);
+          })(i);
+        }
+        var next = document.createElement('button'); next.className = 'page-btn'; next.textContent = '›'; next.disabled = page >= pages;
+        next.onclick = function () { page++; renderTable(); }; wrap.appendChild(next);
+      }
+
+      /* SORT */
+      document.querySelectorAll('thead th[data-col]').forEach(function (th) {
+        th.addEventListener('click', function () {
+          var col = th.dataset.col;
+          if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+          document.querySelectorAll('thead th').forEach(function (t) { t.classList.remove('sorted'); });
+          th.classList.add('sorted'); th.querySelector('em').textContent = sortDir === 1 ? '↑' : '↓';
+          applyFilters();
+        });
+      });
+
+      ['filterMonth', 'filterDept', 'filterStatus'].forEach(function (id) { document.getElementById(id).addEventListener('change', applyFilters); });
+      document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+      /* EXPORT CSV */
+      document.getElementById('btnExport').addEventListener('click', function () {
+        var rows = [['SN', 'Emp ID', 'Full Name', 'Department', 'Date', 'Time In', 'Time Out', 'Hours', 'Status']];
+        filtered.forEach(function (r, i) { rows.push([i + 1, r.empId, r.name, r.dept, r.date, r.timeIn, r.timeOut, r.hours > 0 ? r.hours.toFixed(1) : '0', r.status]); });
+        var csv = rows.map(function (r) { return r.join(','); }).join('\n');
+        var a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+        a.download = 'attendance_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+      });
+
+      /* SIDEBAR */
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function (e) { e.stopPropagation(); sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) { if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== menuToggle && !menuToggle.contains(e.target)) sidebar.classList.remove('open'); });
+
+      applyFilters();
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
