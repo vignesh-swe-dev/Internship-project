@@ -1,0 +1,626 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0a0f18;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 16px rgba(14, 239, 255, .4);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .18);
+      --card-bg: rgba(10, 15, 24, .82)
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #000;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .08) 3px, rgba(0, 0, 0, .08) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    .corner-tl,
+    .corner-tr,
+    .corner-bl,
+    .corner-br {
+      position: fixed;
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--cyan);
+      opacity: .6;
+      z-index: 5;
+      pointer-events: none
+    }
+
+    .corner-tl {
+      top: 24px;
+      left: 24px;
+      border-right: none;
+      border-bottom: none
+    }
+
+    .corner-tr {
+      top: 24px;
+      right: 24px;
+      border-left: none;
+      border-bottom: none
+    }
+
+    .corner-bl {
+      bottom: 24px;
+      left: 24px;
+      border-right: none;
+      border-top: none
+    }
+
+    .corner-br {
+      bottom: 24px;
+      right: 24px;
+      border-left: none;
+      border-top: none
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 36px 32px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(14, 239, 255, .1);
+      animation: cardFadeIn .6s ease backwards
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      animation: scannerSweep 3.2s cubic-bezier(.4, 0, .6, 1) infinite;
+      opacity: .8
+    }
+
+    @keyframes scannerSweep {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: .3
+      }
+
+      50% {
+        transform: translateY(400px);
+        opacity: .8
+      }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(14, 239, 255, .5));
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      flex: 1
+    }
+
+    .brand-title {
+      font-size: .95rem;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #fff;
+      line-height: 1.3;
+      text-shadow: 0 0 12px rgba(14, 239, 255, .3)
+    }
+
+    .brand-subtitle {
+      font-size: .6rem;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      text-transform: uppercase
+    }
+
+    .field {
+      margin-bottom: 20px
+    }
+
+    .field-label {
+      display: block;
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      text-shadow: 0 0 8px var(--cyan-dim)
+    }
+
+    .field-input-wrap {
+      position: relative
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px;
+      height: 17px;
+      color: var(--cyan);
+      opacity: .7;
+      pointer-events: none
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 11px 14px 11px 38px;
+      background: rgba(6, 36, 61, .7);
+      border: 1px solid rgba(14, 239, 255, .15);
+      border-radius: 8px;
+      color: #fff;
+      font-size: .9rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .field-input::placeholder {
+      color: var(--text-dim);
+      letter-spacing: 2px
+    }
+
+    .field-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan-dim), inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .field-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: none;
+      border: none;
+      color: var(--cyan);
+      opacity: .6;
+      cursor: pointer;
+      transition: opacity .2s
+    }
+
+    .field-toggle:hover {
+      opacity: 1
+    }
+
+    .eye-icon {
+      width: 18px;
+      height: 18px
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none
+    }
+
+    .checkbox input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0
+    }
+
+    .checkbox-box {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: rgba(6, 36, 61, .5);
+      transition: background .2s, border-color .2s;
+      position: relative
+    }
+
+    .checkbox input:checked+.checkbox-box {
+      background: var(--cyan);
+      border-color: var(--cyan)
+    }
+
+    .checkbox input:checked+.checkbox-box::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      color: #000;
+      font-weight: 700
+    }
+
+    .checkbox-label {
+      font-size: .78rem;
+      color: var(--text);
+      opacity: .85
+    }
+
+    .forgot-link {
+      font-size: .78rem;
+      color: var(--cyan);
+      text-decoration: none;
+      opacity: .7;
+      transition: opacity .2s
+    }
+
+    .forgot-link:hover {
+      opacity: 1
+    }
+
+    .btn-signin {
+      width: 100%;
+      padding: 13px;
+      border-radius: 8px;
+      border: 1px solid rgba(14, 239, 255, .35);
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan);
+      font-size: .92rem;
+      font-weight: 700;
+      letter-spacing: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background .3s, border-color .3s, box-shadow .3s, transform .2s
+    }
+
+    .btn-signin:hover {
+      background: rgba(14, 239, 255, .15);
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow);
+      transform: translateY(-1px)
+    }
+
+    .btn-signin:active {
+      transform: translateY(0)
+    }
+
+    .btn-ripple {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(14, 239, 255, .5), transparent);
+      transform: scale(0);
+      pointer-events: none
+    }
+
+    .btn-signin.ripple .btn-ripple {
+      animation: rippleEffect .5s ease-out
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(1);
+        opacity: 0
+      }
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent)
+    }
+
+    .divider-text {
+      font-size: .7rem;
+      letter-spacing: 2px;
+      color: var(--text-dim)
+    }
+
+    .btn-google {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .13);
+      background: rgba(255, 255, 255, .04);
+      color: #fff;
+      font-size: .88rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background .3s, border-color .3s, box-shadow .3s
+    }
+
+    .btn-google:hover {
+      background: rgba(255, 255, 255, .09);
+      border-color: rgba(255, 255, 255, .28);
+      box-shadow: 0 0 16px rgba(255, 255, 255, .15)
+    }
+
+    .google-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0
+    }
+
+    .status-message {
+      margin-top: 24px;
+      padding: 10px 14px;
+      background: rgba(6, 36, 61, .4);
+      border: 1px solid rgba(14, 239, 255, .1);
+      border-radius: 6px;
+      font-size: .75rem;
+      font-family: 'Courier New', monospace;
+      color: var(--cyan);
+      opacity: .7;
+      text-align: center;
+      letter-spacing: 1px
+    }
+
+    .security-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px
+    }
+
+    .security-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 6px var(--cyan)
+    }
+
+    .security-line {
+      width: 24px;
+      height: 1px;
+      background: var(--cyan);
+      opacity: .3
+    }
+
+    .security-text {
+      font-size: .6rem;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      opacity: .5
+    }
+
+    @media(max-width:600px) {
+      .login-card {
+        max-width: 360px;
+        padding: 32px 28px 24px
+      }
+
+      .corner-tl,
+      .corner-tr,
+      .corner-bl,
+      .corner-br {
+        width: 36px;
+        height: 36px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+  <div class="corner-tl"></div>
+  <div class="corner-tr"></div>
+  <div class="corner-bl"></div>
+  <div class="corner-br"></div>
+  <div class="login-card">
+    <div class="brand">
+      <img class="brand-icon" src="./Assets/logo.png" alt="Thinkinfo Logo">
+      <div class="brand-text">
+        <div class="brand-title">THINKINFO EXPERT<br />SOLUTIONS</div>
+        <div class="brand-subtitle">Security Operations Centre</div>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">EMAIL</label>
+      <div class="field-input-wrap">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="M3 7l9 6 9-6" />
+        </svg>
+        <input type="email" id="email" class="field-input" placeholder="you@example.com" required />
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">PASSWORD</label>
+      <div class="field-input-wrap">
+        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="11" width="14" height="10" rx="2" />
+          <path d="M12 16v2" />
+          <path d="M7 11V7a5 5 0 0110 0v4" />
+        </svg>
+        <input type="password" id="password" class="field-input" placeholder="••••••••••" required />
+        <button type="button" class="field-toggle" id="togglePassword"><svg class="eye-icon" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg></button>
+      </div>
+    </div>
+    <div class="field-row">
+      <label class="checkbox"><input type="checkbox" id="remember" /><span class="checkbox-box"></span><span
+          class="checkbox-label">Remember me</span></label>
+      <a href="#" class="forgot-link">Forgot password?</a>
+    </div>
+    <button type="submit" class="btn-signin" id="btnSignIn"><span>SIGN IN</span><span
+        class="btn-ripple"></span></button>
+    <div class="divider"><span class="divider-line"></span><span class="divider-text">OR</span><span
+        class="divider-line"></span></div>
+    <button type="button" class="btn-google" id="btnGoogle">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4"
+          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+        <path fill="#34A853"
+          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+        <path fill="#FBBC05"
+          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+        <path fill="#EA4335"
+          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+      </svg>
+      <span>Sign in with Google</span>
+    </button>
+    <div class="status-message" id="statusMessage">// Awaiting authentication …</div>
+    <div class="security-footer"><span class="security-dot"></span><span class="security-line"></span><span
+        class="security-text">AES-256 · TLS 1.3 · ZERO-TRUST</span><span class="security-line"></span><span
+        class="security-dot"></span></div>
+  </div>
+  <script src="api.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      // Matrix rain
+      (function () { var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops, CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\'; function pick(a) { return a[Math.floor(Math.random() * a.length)] } function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) } resize(); addEventListener('resize', resize); ctx.fillStyle = 'rgb(10,15,24)'; ctx.fillRect(0, 0, W, H); (function loop() { ctx.fillStyle = 'rgba(10,15,24,0.06)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px "Courier New"'; for (var i = 0; i < drops.length; i++) { var x = i * 18, y = drops[i] * 18; ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(pick(CH), x, y); ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(pick(CH), x, y - 18); if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++ } requestAnimationFrame(loop) })() })();
+
+      // If already logged in → skip to dashboard
+      if (ThinkAPI.getToken()) { window.location.href = 'employee-home.html'; }
+
+      // Password toggle
+      var togglePassword = document.getElementById('togglePassword');
+      var passwordInput = document.getElementById('password');
+      togglePassword.addEventListener('click', function () {
+        passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+      });
+
+      var statusEl = document.getElementById('statusMessage');
+      function showStatus(messages, color) {
+        var delay = 0; statusEl.innerHTML = ''; statusEl.style.color = color || '#0ef';
+        messages.forEach(function (msg) { setTimeout(function () { statusEl.innerHTML += msg + '<br/>'; }, delay); delay += 380; });
+      }
+
+      var btnSignIn = document.getElementById('btnSignIn');
+      var emailInput = document.getElementById('email');
+
+      btnSignIn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        btnSignIn.classList.add('ripple');
+        setTimeout(function () { btnSignIn.classList.remove('ripple'); }, 500);
+
+        var email = emailInput.value.trim();
+        var password = passwordInput.value;
+
+        if (!email || !password) { showStatus(['// ERROR: credentials required …', '// aborting handshake.'], '#ff3a4a'); return; }
+        if (!email.includes('@')) { showStatus(['// ERROR: invalid email format …', '// check and retry.'], '#ff3a4a'); return; }
+
+        btnSignIn.disabled = true;
+        showStatus(['// connecting to auth server …', '// encrypting payload …'], '#0ef');
+
+        var result = await ThinkAPI.apiFetch('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: email, password: password })
+        });
+
+        btnSignIn.disabled = false;
+
+        if (!result || !result.ok) {
+          var msg = (result && result.data && result.data.message) || 'Cannot reach server. Make sure backend is running.';
+          showStatus(['// ERROR: ' + msg, '// access denied.'], '#ff3a4a');
+          return;
+        }
+
+        ThinkAPI.setToken(result.data.data.token);
+        ThinkAPI.setUser(result.data.data.user);
+
+        showStatus(['// handshake established.', '// verifying credentials …', '// ACCESS GRANTED ✓'], '#00e676');
+        setTimeout(function () { window.location.href = 'employee-home.html'; }, 1800);
+      });
+
+      document.getElementById('btnGoogle').addEventListener('click', function () {
+        showStatus(['// Google Sign-In not configured.', '// Use email/password instead.'], '#ffaa00');
+      });
+    })();
+  </script>
+</body>
+
+</html>
