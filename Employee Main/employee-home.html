@@ -1,0 +1,1012 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Thinkinfo Expert Solutions — Employee Dashboard</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 170, 0, .5)
+      }
+
+      50% {
+        opacity: .85;
+        box-shadow: 0 0 0 4px rgba(255, 170, 0, 0)
+      }
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    /* MAIN */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep {
+      color: var(--text-dim)
+    }
+
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* STAT CARDS */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      background: rgba(15, 22, 32, .9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s, transform .2s;
+      cursor: default
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, currentColor 100%);
+      opacity: .06;
+      pointer-events: none
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px)
+    }
+
+    .stat-card.cyan {
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .stat-card.cyan:hover {
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .stat-card.green {
+      color: var(--green);
+      border-color: var(--green-dim)
+    }
+
+    .stat-card.green:hover {
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .stat-card.amber {
+      color: var(--amber);
+      border-color: var(--amber-dim)
+    }
+
+    .stat-card.amber:hover {
+      border-color: var(--amber);
+      box-shadow: var(--amber-glow)
+    }
+
+    .stat-card.red {
+      color: var(--red);
+      border-color: var(--red-dim)
+    }
+
+    .stat-card.red:hover {
+      border-color: var(--red);
+      box-shadow: var(--red-glow)
+    }
+
+    .stat-icon {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: rgba(20, 28, 42, .8);
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 0 8px currentColor)
+    }
+
+    .stat-icon svg {
+      width: 40px;
+      height: 40px
+    }
+
+    .stat-body {
+      flex: 1
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      text-shadow: 0 0 12px currentColor
+    }
+
+    .stat-label {
+      font-size: .78rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      letter-spacing: .5px
+    }
+
+    /* CHART PANELS */
+    .chart-panels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 16px
+    }
+
+    .panel {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .08);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .15), inset 0 1px 0 rgba(14, 239, 255, .12)
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(15, 22, 32, .7);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .panel-title {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .5px
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 6px
+    }
+
+    .panel-btn {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      font-size: .9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .panel-btn:hover {
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .panel-btn.close-btn:hover {
+      background: rgba(255, 58, 74, .08);
+      color: var(--red);
+      border-color: var(--red-dim)
+    }
+
+    .panel-body {
+      padding: 20px;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center
+    }
+
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      justify-content: center
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .74rem;
+      color: var(--text-dim)
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 6px currentColor
+    }
+
+    .panel.collapsed .panel-body {
+      display: none
+    }
+
+    .panel.hidden {
+      display: none
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .stat-cards {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .chart-panels {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:500px) {
+      .stat-cards {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" style="display:block;" />
+      <span class="sidebar-title">Employee Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">F</div>
+      <div class="user-info">
+        <div class="user-name">Frontend, Employee</div>
+        <div class="user-role">Frontend Developer</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="employee-home.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="employee-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="employee-view-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <polyline points="12 12 15 14" />
+        </svg>
+        <span>View Salary</span>
+      </a>
+      <a href="employee-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="employee-notifications.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>View Notifications</span>
+        <span class="nav-badge" id="navBadge">3</span>
+      </a>
+      <a href="employee-apply-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        <span>Apply For Leave</span>
+      </a>
+      <a href="employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Feedback</span>
+      </a>
+      <a href="relieving-letter-complete.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg>
+        <span>Relieving Letter</span>
+      </a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Employee Homepage</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="#" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Employee Homepage</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- STAT CARDS -->
+      <div class="stat-cards">
+        <!-- Total Attendance (cyan) -->
+        <div class="stat-card cyan">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <rect x="8" y="14" width="48" height="40" rx="4" />
+              <line x1="8" y1="26" x2="56" y2="26" />
+              <line x1="20" y1="8" x2="20" y2="20" />
+              <line x1="44" y1="8" x2="44" y2="20" />
+              <polyline points="22 38 28 44 42 32" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="totalAttendance">0</div>
+            <div class="stat-label">Total Attendance</div>
+          </div>
+        </div>
+
+        <!-- Percentage Present (green) -->
+        <div class="stat-card green">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <circle cx="32" cy="32" r="22" />
+              <polyline points="22 32 29 39 44 24" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="pctPresent">0%</div>
+            <div class="stat-label">Percentage Present</div>
+          </div>
+        </div>
+
+        <!-- Percentage Absent (red) -->
+        <div class="stat-card red">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <circle cx="32" cy="32" r="22" />
+              <line x1="24" y1="24" x2="40" y2="40" stroke-linecap="round" />
+              <line x1="40" y1="24" x2="24" y2="40" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="pctAbsent">0%</div>
+            <div class="stat-label">Percentage Absent</div>
+          </div>
+        </div>
+
+        <!-- Total Department (amber) -->
+        <div class="stat-card amber">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <circle cx="32" cy="32" r="22" />
+              <path d="M32 10 L54 32 L32 54 L10 32 Z" />
+              <circle cx="32" cy="32" r="6" fill="currentColor" stroke="none" opacity=".5" />
+              <line x1="32" y1="10" x2="32" y2="54" stroke-width="1.5" opacity=".4" />
+              <line x1="10" y1="32" x2="54" y2="32" stroke-width="1.5" opacity=".4" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="totalDept">0</div>
+            <div class="stat-label">Total Department</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART PANELS -->
+      <div class="chart-panels">
+        <!-- Donut Chart -->
+        <div class="panel" id="panel1">
+          <div class="panel-header">
+            <span class="panel-title">Employee Homepage</span>
+            <div class="panel-actions">
+              <button class="panel-btn" title="Minimize" onclick="togglePanel('panel1')">−</button>
+              <button class="panel-btn close-btn" title="Close" onclick="closePanel('panel1')">✕</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <canvas id="donutChart" width="300" height="220"></canvas>
+            <div class="chart-legend" id="donutLegend"></div>
+          </div>
+        </div>
+
+        <!-- Bar Chart -->
+        <div class="panel" id="panel2">
+          <div class="panel-header">
+            <span class="panel-title">Employee Homepage</span>
+            <div class="panel-actions">
+              <button class="panel-btn" title="Minimize" onclick="togglePanel('panel2')">−</button>
+              <button class="panel-btn close-btn" title="Close" onclick="closePanel('panel2')">✕</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <canvas id="barChart" width="400" height="220"></canvas>
+            <div class="chart-legend" id="barLegend"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ── Matrix Rain ── */
+      (function matrix() {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0;
+            drops[i]++
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Donut Chart: Present / Absent ── */
+      (function donutChart() {
+        var canvas = document.getElementById('donutChart'), ctx = canvas.getContext('2d'),
+          legend = document.getElementById('donutLegend');
+        var data = { Present: 2, Absent: 0 };
+        var colors = { Present: '#00e676', Absent: '#ff3a4a' };
+        function draw() {
+          var dpr = window.devicePixelRatio || 1;
+          canvas.width = 300 * dpr; canvas.height = 220 * dpr;
+          canvas.style.width = '300px'; canvas.style.height = '220px';
+          ctx.scale(dpr, dpr);
+          var total = Object.values(data).reduce(function (a, b) { return a + b }, 0) || 1;
+          var cx = 150, cy = 105, outer = 85, inner = 54, startAngle = -Math.PI / 2;
+          Object.keys(data).forEach(function (key) {
+            var val = data[key] === 0 ? 0.0001 : data[key];
+            var sweep = (val / total) * Math.PI * 2, end = startAngle + sweep;
+            ctx.beginPath();
+            ctx.arc(cx, cy, outer, startAngle, end);
+            ctx.arc(cx, cy, inner, end, startAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = colors[key]; ctx.fill();
+            ctx.strokeStyle = 'rgba(10,15,24,.6)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy, outer + 2, startAngle, end);
+            ctx.strokeStyle = colors[key] + '55'; ctx.lineWidth = 3; ctx.stroke();
+            startAngle = end;
+          });
+          ctx.fillStyle = 'rgba(10,15,24,.7)'; ctx.beginPath(); ctx.arc(cx, cy, inner - 2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 22px "Segoe UI"'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(Object.values(data).reduce(function (a, b) { return a + b }, 0), cx, cy - 8);
+          ctx.fillStyle = '#4e6a7d'; ctx.font = '11px "Segoe UI"'; ctx.fillText('Records', cx, cy + 12);
+        }
+        legend.innerHTML = '';
+        Object.keys(data).forEach(function (k) {
+          var item = document.createElement('div'); item.className = 'legend-item';
+          item.innerHTML = '<span class="legend-dot" style="background:' + colors[k] + ';color:' + colors[k] + '"></span>' + k;
+          legend.appendChild(item);
+        });
+        draw(); addEventListener('resize', draw);
+      })();
+
+      /* ── Bar Chart: Present In Class / Absent In Class by Department ── */
+      (function barChart() {
+        var canvas = document.getElementById('barChart'), ctx = canvas.getContext('2d'),
+          legend = document.getElementById('barLegend');
+        var labels = ['Frontend Developer'];
+        var presentData = [2], absentData = [0];
+        var colorPresent = '#5da5d8', colorAbsent = '#b0bec5';
+        function draw() {
+          var dpr = window.devicePixelRatio || 1, cw = canvas.parentElement.clientWidth - 40 || 400;
+          canvas.width = cw * dpr; canvas.height = 220 * dpr;
+          canvas.style.width = cw + 'px'; canvas.style.height = '220px';
+          ctx.scale(dpr, dpr);
+          var w = cw, h = 220, padL = 54, padR = 20, padT = 20, padB = 36;
+          var chartW = w - padL - padR, chartH = h - padT - padB;
+          var allVals = presentData.concat(absentData);
+          var maxVal = Math.max.apply(null, allVals) || 2;
+          var steps = 5;
+          ctx.fillStyle = '#4e6a7d'; ctx.font = '10px "Segoe UI"'; ctx.textAlign = 'right';
+          for (var i = 0; i <= steps; i++) {
+            var val = (maxVal / steps) * i, yPos = padT + chartH - (val / maxVal) * chartH;
+            ctx.fillText(val.toFixed(1), padL - 8, yPos + 4);
+            ctx.strokeStyle = 'rgba(14,239,255,0.06)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(padL, yPos); ctx.lineTo(w - padR, yPos); ctx.stroke();
+          }
+          var groupW = chartW / labels.length, barW = Math.min(40, groupW / 2 - 10);
+          labels.forEach(function (label, i) {
+            var gx = padL + groupW * i + groupW / 2;
+            // Present bar
+            var bh1 = (presentData[i] / maxVal) * chartH, x1 = gx - barW - 2, y1 = padT + chartH - bh1;
+            ctx.shadowColor = colorPresent; ctx.shadowBlur = 10;
+            var g1 = ctx.createLinearGradient(0, y1, 0, y1 + bh1);
+            g1.addColorStop(0, colorPresent); g1.addColorStop(1, colorPresent + '44');
+            ctx.fillStyle = g1; ctx.fillRect(x1, y1, barW, bh1);
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = colorPresent + '88'; ctx.lineWidth = 1; ctx.strokeRect(x1, y1, barW, bh1);
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 11px "Segoe UI"'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.fillText(presentData[i], x1 + barW / 2, y1 - 2); ctx.textBaseline = 'alphabetic';
+            // Absent bar
+            var bh2 = ((absentData[i] || 0.0001) / maxVal) * chartH, x2 = gx + 2, y2 = padT + chartH - bh2;
+            ctx.shadowColor = colorAbsent; ctx.shadowBlur = 6;
+            var g2 = ctx.createLinearGradient(0, y2, 0, y2 + bh2);
+            g2.addColorStop(0, colorAbsent); g2.addColorStop(1, colorAbsent + '44');
+            ctx.fillStyle = g2; ctx.fillRect(x2, y2, barW, bh2);
+            ctx.shadowBlur = 0;
+            // Label
+            ctx.fillStyle = '#b8d4e8'; ctx.font = '11px "Segoe UI"'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+            ctx.fillText(label, gx, padT + chartH + 20);
+          });
+        }
+        legend.innerHTML =
+          '<div class="legend-item"><span class="legend-dot" style="background:' + colorPresent + ';color:' + colorPresent + '"></span>Present In Class</div>' +
+          '<div class="legend-item"><span class="legend-dot" style="background:' + colorAbsent + ';color:' + colorAbsent + '"></span>Absent In Class</div>';
+        draw(); addEventListener('resize', draw);
+      })();
+
+      /* ── Panel controls ── */
+      window.togglePanel = function (id) {
+        var p = document.getElementById(id); p.classList.toggle('collapsed');
+        var btn = p.querySelector('.panel-btn'); btn.textContent = p.classList.contains('collapsed') ? '+' : '−';
+      };
+      window.closePanel = function (id) { document.getElementById(id).classList.add('hidden'); };
+
+      /* ── Sidebar toggle ── */
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.querySelector('.sidebar');
+      menuToggle && menuToggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) { if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open'); });
+
+      /* ── Animate stat counters ── */
+      function animateValue(el, end, suffix, duration) {
+        var start = 0, startTime = null;
+        suffix = suffix || '';
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var p = Math.min((ts - startTime) / duration, 1);
+          el.textContent = Math.floor(start + (end - start) * p) + suffix;
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+      setTimeout(function () {
+        animateValue(document.getElementById('totalAttendance'), 2, '', 900);
+        animateValue(document.getElementById('pctPresent'), 100, '%', 900);
+        animateValue(document.getElementById('pctAbsent'), 0, '%', 900);
+        animateValue(document.getElementById('totalDept'), 1, '', 900);
+      }, 200);
+
+      /* ── Dynamic Year ── */
+      (function () {
+        var yearEl = document.getElementById('copyright-year');
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+      })();
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var count = parseInt(localStorage.getItem('notifUnread') || '3', 10);
+        var badge = document.getElementById('navBadge');
+        if (badge) { if (count > 0) { badge.textContent = count; badge.style.display = ''; } else { badge.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
