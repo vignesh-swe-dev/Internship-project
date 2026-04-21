@@ -1,0 +1,1655 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions — Employee Profile</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ══ SIDEBAR ══ */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .92);
+      backdrop-filter: blur(14px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim);
+      flex-shrink: 0
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim);
+      overflow: hidden;
+      position: relative
+    }
+
+    .user-avatar img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      transition: filter .2s
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link:hover svg {
+      filter: drop-shadow(0 0 4px var(--cyan))
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-link.active svg {
+      filter: drop-shadow(0 0 6px var(--cyan))
+    }
+
+    /* ══ MAIN ══ */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, .5)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ══ ALERT ══ */
+    .alert {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      font-size: .88rem;
+      font-weight: 500;
+      animation: slideDown .4s ease
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .alert.hidden {
+      display: none
+    }
+
+    .alert-success {
+      background: rgba(0, 230, 118, .1);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      box-shadow: 0 0 16px rgba(0, 230, 118, .15)
+    }
+
+    .alert-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0
+    }
+
+    /* ══ PROFILE GRID ══ */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 20px;
+      align-items: start
+    }
+
+    /* ── Avatar Card ── */
+    .avatar-card {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .06);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .avatar-card:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .14), inset 0 1px 0 rgba(14, 239, 255, .1)
+    }
+
+    .avatar-card-header {
+      padding: 13px 18px;
+      background: linear-gradient(90deg, rgba(14, 239, 255, .12) 0%, rgba(14, 239, 255, .03) 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .avatar-card-header-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(14, 239, 255, .1);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .avatar-card-header-icon svg {
+      width: 15px;
+      height: 15px;
+      color: var(--cyan)
+    }
+
+    .avatar-card-title {
+      font-size: .84rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px var(--cyan-dim)
+    }
+
+    .avatar-card-body {
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px
+    }
+
+    /* spinning ring — cyan theme */
+    .avatar-ring {
+      position: relative;
+      width: 120px;
+      height: 120px
+    }
+
+    .avatar-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(var(--cyan), var(--green), var(--cyan), transparent 60%);
+      animation: spin 4s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .avatar-ring::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: rgba(2, 6, 8, .6)
+    }
+
+    .avatar-img-wrap {
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #000;
+      z-index: 1;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, .3)
+    }
+
+    .avatar-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none
+    }
+
+    .avatar-initials {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #000
+    }
+
+    .avatar-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+      letter-spacing: .3px
+    }
+
+    .avatar-role {
+      font-size: .78rem;
+      color: var(--cyan);
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px var(--cyan-dim)
+    }
+
+    .avatar-badges {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      margin-top: 4px
+    }
+
+    .avatar-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(15, 22, 32, .8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .77rem
+    }
+
+    .avatar-badge-icon {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      color: var(--cyan)
+    }
+
+    .avatar-badge-label {
+      color: var(--text-dim);
+      flex-shrink: 0;
+      min-width: 52px
+    }
+
+    .avatar-badge-value {
+      color: var(--text);
+      font-weight: 600;
+      margin-left: auto;
+      text-align: right;
+      word-break: break-all
+    }
+
+    /* completion bar */
+    .completion-wrap {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(15, 22, 32, .7);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .completion-label {
+      font-size: .69rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: .6px;
+      text-transform: uppercase
+    }
+
+    .completion-bar-bg {
+      height: 6px;
+      background: rgba(14, 239, 255, .08);
+      border-radius: 3px;
+      overflow: hidden
+    }
+
+    .completion-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--green));
+      box-shadow: 0 0 8px var(--cyan-dim);
+      transition: width .6s cubic-bezier(.4, 0, .2, 1);
+      width: 0%
+    }
+
+    .completion-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .completion-pct {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--cyan)
+    }
+
+    .completion-note {
+      font-size: .68rem;
+      color: var(--text-dim)
+    }
+
+    /* ── Form Panel ── */
+    .panel {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .08);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .12), inset 0 1px 0 rgba(14, 239, 255, .12)
+    }
+
+    .panel-header {
+      padding: 13px 18px;
+      background: linear-gradient(90deg, rgba(14, 239, 255, .1) 0%, rgba(14, 239, 255, .03) 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .panel-header-icon {
+      width: 28px;
+      height: 28px;
+      background: rgba(14, 239, 255, .1);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .panel-header-icon svg {
+      width: 15px;
+      height: 15px;
+      color: var(--cyan)
+    }
+
+    .panel-title {
+      font-size: .84rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px var(--cyan-dim)
+    }
+
+    .panel-body {
+      padding: 24px
+    }
+
+    /* ── Form Fields ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 20px
+    }
+
+    .field {
+      margin-bottom: 18px
+    }
+
+    .field.full {
+      grid-column: 1 / -1
+    }
+
+    .field-label {
+      display: block;
+      font-size: .75rem;
+      letter-spacing: .5px;
+      color: var(--text);
+      margin-bottom: 7px;
+      font-weight: 600;
+      text-transform: uppercase
+    }
+
+    .field-label .req {
+      color: var(--red);
+      margin-left: 2px
+    }
+
+    .field-input,
+    .field-select,
+    .field-textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(6, 36, 61, .6);
+      border: 1px solid rgba(14, 239, 255, .15);
+      border-radius: 8px;
+      color: #fff;
+      font-family: inherit;
+      font-size: .88rem;
+      outline: none;
+      transition: border-color .3s, box-shadow .3s, background .3s
+    }
+
+    .field-input::placeholder,
+    .field-textarea::placeholder {
+      color: var(--text-dim)
+    }
+
+    .field-input:focus,
+    .field-select:focus,
+    .field-textarea:focus {
+      border-color: var(--cyan);
+      background: rgba(6, 36, 61, .85);
+      box-shadow: 0 0 12px var(--cyan-dim), inset 0 0 12px rgba(14, 239, 255, .06)
+    }
+
+    .field-input.readonly-field {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    .field-input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 10px var(--red-dim)
+    }
+
+    .field-select {
+      appearance: none;
+      cursor: pointer;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%230ef" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+      padding-right: 40px
+    }
+
+    .field-select option {
+      background: #0a0f18;
+      color: #fff
+    }
+
+    .field-textarea {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5
+    }
+
+    /* password toggle */
+    .pw-wrap {
+      position: relative
+    }
+
+    .pw-wrap .field-input {
+      padding-right: 44px
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-dim);
+      padding: 0;
+      transition: color .2s
+    }
+
+    .pw-toggle:hover {
+      color: var(--cyan)
+    }
+
+    .pw-toggle svg {
+      width: 16px;
+      height: 16px;
+      display: block
+    }
+
+    /* file input */
+    .file-input-wrap {
+      position: relative
+    }
+
+    .file-input {
+      position: absolute;
+      width: .1px;
+      height: .1px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1
+    }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      background: rgba(6, 36, 61, .6);
+      border: 1px solid rgba(14, 239, 255, .15);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-size: .88rem;
+      cursor: pointer;
+      transition: border-color .3s, box-shadow .3s, background .3s
+    }
+
+    .file-label:hover {
+      border-color: var(--cyan);
+      background: rgba(6, 36, 61, .85);
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .file-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      color: var(--cyan)
+    }
+
+    .file-text {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .preview-strip {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(14, 239, 255, .04);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 8px
+    }
+
+    .preview-strip.visible {
+      display: flex
+    }
+
+    .preview-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .preview-info {
+      flex: 1
+    }
+
+    .preview-name {
+      font-size: .8rem;
+      font-weight: 600;
+      color: #fff
+    }
+
+    .preview-size {
+      font-size: .72rem;
+      color: var(--text-dim);
+      margin-top: 2px
+    }
+
+    .preview-remove {
+      background: none;
+      border: 1px solid var(--red-dim);
+      border-radius: 5px;
+      color: var(--red);
+      font-size: .7rem;
+      padding: 3px 9px;
+      cursor: pointer;
+      transition: background .2s
+    }
+
+    .preview-remove:hover {
+      background: rgba(255, 58, 74, .1)
+    }
+
+    /* section divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 6px 0 20px;
+      grid-column: 1 / -1
+    }
+
+    .section-divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    .section-divider-label {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    /* buttons */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 6px;
+      grid-column: 1 / -1
+    }
+
+    .btn-submit {
+      flex: 1;
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: 1px solid rgba(14, 239, 255, .35);
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan);
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .3s, border-color .3s, box-shadow .3s, transform .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px
+    }
+
+    .btn-submit svg {
+      width: 16px;
+      height: 16px
+    }
+
+    .btn-submit:hover {
+      background: rgba(14, 239, 255, .16);
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px var(--cyan-dim);
+      transform: translateY(-1px)
+    }
+
+    .btn-submit:active {
+      transform: translateY(0)
+    }
+
+    .btn-reset {
+      padding: 12px 22px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 58, 74, .3);
+      background: rgba(255, 58, 74, .06);
+      color: var(--red);
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: .5px;
+      transition: background .3s, border-color .3s, box-shadow .3s
+    }
+
+    .btn-reset:hover {
+      background: rgba(255, 58, 74, .12);
+      border-color: var(--red);
+      box-shadow: 0 0 16px var(--red-dim)
+    }
+
+    /* ══ FOOTER ══ */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    .footer strong {
+      color: var(--cyan);
+      text-shadow: 0 0 8px rgba(14,239,255,.8), 0 0 20px rgba(14,239,255,.4);
+      letter-spacing: .3px
+    }
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:1100px) {
+      .profile-grid {
+        grid-template-columns: 1fr
+      }
+
+      .avatar-card {
+        display: none
+      }
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .field.full,
+      .section-divider,
+      .btn-row {
+        grid-column: 1
+      }
+    }
+
+    @media(max-width:500px) {
+      .content {
+        padding: 14px
+      }
+
+      .panel-body {
+        padding: 16px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" style="display:block;" />
+      <span class="sidebar-title">Employee Panel</span>
+    </div>
+
+    <div class="user-card">
+      <div class="user-avatar" id="sidebarAvatar">
+        <img id="sidebarAvatarImg" src="" alt="Profile" />
+        <span id="sidebarAvatarInitial">F</span>
+      </div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Frontend, Employee</div>
+        <div class="user-role" id="sidebarRole">Developer</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="employee-home.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="employee-profile-edit.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="employee-view-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span>View Salary</span>
+      </a>
+      <a href="employee-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="employee-notifications.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>View Notifications</span>
+        <span class="nav-badge" id="navBadge">3</span>
+      </a>
+      <a href="employee-apply-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        <span>Apply For Leave</span>
+      </a>
+      <a href="employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Feedback</span>
+      </a>
+      <a href="relieving-letter-complete.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg>
+        <span>Relieving Letter</span>
+      </a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">View / Edit Profile</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="dashboard-complete.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">View/Edit Profile</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- Success Alert -->
+      <div class="alert alert-success hidden" id="alertSuccess">
+        <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        <span>Profile updated successfully!</span>
+      </div>
+
+      <div class="profile-grid">
+
+        <!-- ── Left: Avatar Card ── -->
+        <div class="avatar-card">
+          <div class="avatar-card-header">
+            <div class="avatar-card-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+            <span class="avatar-card-title">Profile Card</span>
+          </div>
+          <div class="avatar-card-body">
+
+            <!-- spinning ring -->
+            <div class="avatar-ring">
+              <div class="avatar-img-wrap" id="avatarImgWrap">
+                <img id="avatarRingImg" src="" alt="avatar" />
+                <span class="avatar-initials" id="avatarInitials">F</span>
+              </div>
+            </div>
+
+            <div class="avatar-name" id="previewFullName">Frontend Employee</div>
+            <div class="avatar-role" id="previewRole">Developer</div>
+
+            <div class="avatar-badges">
+              <div class="avatar-badge">
+                <svg class="avatar-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                <span class="avatar-badge-label">Email</span>
+                <span class="avatar-badge-value" id="previewEmail">employee@company.com</span>
+              </div>
+              <div class="avatar-badge">
+                <svg class="avatar-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+                <span class="avatar-badge-label">Phone</span>
+                <span class="avatar-badge-value" id="previewPhone">—</span>
+              </div>
+              <div class="avatar-badge">
+                <svg class="avatar-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span class="avatar-badge-label">Gender</span>
+                <span class="avatar-badge-value" id="previewGender">—</span>
+              </div>
+              <div class="avatar-badge">
+                <svg class="avatar-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span class="avatar-badge-label">Address</span>
+                <span class="avatar-badge-value" id="previewAddress">—</span>
+              </div>
+            </div>
+
+            <!-- profile completion bar -->
+            <div class="completion-wrap">
+              <div class="completion-label">Profile Completion</div>
+              <div class="completion-bar-bg">
+                <div class="completion-bar-fill" id="completionBar"></div>
+              </div>
+              <div class="completion-row">
+                <span class="completion-pct" id="completionPct">0%</span>
+                <span class="completion-note" id="completionNote">Fill all fields</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Right: Form Panel ── -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-header-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+            <span class="panel-title">View / Edit Profile</span>
+          </div>
+
+          <div class="panel-body">
+            <form id="profileForm" novalidate>
+              <div class="form-grid">
+
+                <!-- Personal Information -->
+                <div class="section-divider">
+                  <div class="section-divider-line"></div>
+                  <span class="section-divider-label">Personal Information</span>
+                  <div class="section-divider-line"></div>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="firstName">First Name <span class="req">*</span></label>
+                  <input type="text" id="firstName" class="field-input" value="Frontend" placeholder="Enter first name"
+                    required />
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="lastName">Last Name <span class="req">*</span></label>
+                  <input type="text" id="lastName" class="field-input" value="Employee" placeholder="Enter last name"
+                    required />
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="email">Email Address <span class="req">*</span></label>
+                  <input type="email" id="email" class="field-input" value="employee@company.com"
+                    placeholder="Enter email" required />
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="phone">Phone Number</label>
+                  <input type="tel" id="phone" class="field-input" placeholder="+91 XXXXX XXXXX" />
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="gender">Gender</label>
+                  <select id="gender" class="field-select">
+                    <option value="">— Select —</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="dob">Date of Birth</label>
+                  <input type="date" id="dob" class="field-input" />
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="department">Department</label>
+                  <select id="department" class="field-select">
+                    <option value="Frontend Developer" selected>Frontend Developer</option>
+                    <option value="Backend Developer">Backend Developer</option>
+                    <option value="UI/UX Designer">UI/UX Designer</option>
+                    <option value="QA Engineer">QA Engineer</option>
+                    <option value="HR">HR</option>
+                    <option value="Sales">Sales</option>
+                    <option value="IT">IT</option>
+                    <option value="Micro Biology">Micro Biology</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="empId">Employee ID</label>
+                  <input type="text" id="empId" class="field-input readonly-field" value="EMP-001" readonly />
+                </div>
+
+                <div class="field full">
+                  <label class="field-label" for="address">Address</label>
+                  <textarea id="address" class="field-textarea" rows="3" placeholder="Enter your address"></textarea>
+                </div>
+
+                <!-- Security -->
+                <div class="section-divider">
+                  <div class="section-divider-line"></div>
+                  <span class="section-divider-label">Security</span>
+                  <div class="section-divider-line"></div>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="password">New Password</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="password" class="field-input"
+                      placeholder="Leave blank to keep current" />
+                    <button type="button" class="pw-toggle" id="pwToggle1" title="Show/Hide">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label class="field-label" for="confirmPassword">Confirm Password</label>
+                  <div class="pw-wrap">
+                    <input type="password" id="confirmPassword" class="field-input" placeholder="Repeat new password" />
+                    <button type="button" class="pw-toggle" id="pwToggle2" title="Show/Hide">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Profile Picture -->
+                <div class="section-divider">
+                  <div class="section-divider-line"></div>
+                  <span class="section-divider-label">Profile Picture</span>
+                  <div class="section-divider-line"></div>
+                </div>
+
+                <div class="field full">
+                  <label class="field-label" for="profilePic">Upload Photo</label>
+                  <div class="file-input-wrap">
+                    <input type="file" id="profilePic" class="file-input" accept="image/*" />
+                    <label for="profilePic" class="file-label">
+                      <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <span class="file-text" id="fileText">No file chosen — click to browse</span>
+                    </label>
+                  </div>
+                  <div class="preview-strip" id="previewStrip">
+                    <img class="preview-thumb" id="previewThumb" src="" alt="preview" />
+                    <div class="preview-info">
+                      <div class="preview-name" id="previewFileName">—</div>
+                      <div class="preview-size" id="previewFileSize">—</div>
+                    </div>
+                    <button type="button" class="preview-remove" id="removePhoto">Remove</button>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="btn-row">
+                  <button type="submit" class="btn-submit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Update Profile
+                  </button>
+                  <button type="button" class="btn-reset" id="resetBtn">Reset</button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div><!-- /profile-grid -->
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Matrix Rain ── */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1); }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0;
+            drops[i]++;
+          }
+          requestAnimationFrame(loop);
+        })();
+      })();
+
+      /* ── Sidebar Toggle ── */
+      var menuToggle = document.getElementById('menuToggle');
+      var sidebar = document.querySelector('.sidebar');
+      menuToggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open');
+      });
+
+      /* ── Completion Calculator ── */
+      var completionFields = ['firstName', 'lastName', 'email', 'phone', 'gender', 'dob', 'department', 'address'];
+      function calcCompletion() {
+        var filled = 0;
+        completionFields.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el && el.value.trim() !== '' && el.value !== '') filled++;
+        });
+        var hasPic = document.getElementById('profilePic').files.length > 0;
+        if (hasPic) filled++;
+        var total = completionFields.length + 1;
+        var pct = Math.round((filled / total) * 100);
+        document.getElementById('completionBar').style.width = pct + '%';
+        document.getElementById('completionPct').textContent = pct + '%';
+        var note = pct === 100 ? '✓ Complete!' : (total - filled) + ' field' + (total - filled !== 1 ? 's' : '') + ' remaining';
+        document.getElementById('completionNote').textContent = note;
+      }
+
+      /* ── Live Preview ── */
+      function updatePreview() {
+        var fn = document.getElementById('firstName').value.trim();
+        var ln = document.getElementById('lastName').value.trim();
+        var fullName = ((fn + ' ' + ln).trim()) || 'Frontend Employee';
+        var initials = ((fn[0] || '') + (ln[0] || '')).toUpperCase() || 'F';
+
+        document.getElementById('previewFullName').textContent = fullName;
+        document.getElementById('sidebarName').textContent = (fn || 'Frontend') + ', ' + (ln || 'Employee');
+        document.getElementById('avatarInitials').textContent = initials;
+        document.getElementById('sidebarAvatar').textContent = initials[0] || 'F';
+
+        var dept = document.getElementById('department');
+        var deptVal = dept.options[dept.selectedIndex] ? dept.options[dept.selectedIndex].text : 'Developer';
+        document.getElementById('sidebarRole').textContent = deptVal;
+        document.getElementById('previewRole').textContent = deptVal;
+
+        document.getElementById('previewEmail').textContent = document.getElementById('email').value.trim() || '—';
+        document.getElementById('previewPhone').textContent = document.getElementById('phone').value.trim() || '—';
+
+        var g = document.getElementById('gender');
+        var gVal = g.value ? g.options[g.selectedIndex].text : '—';
+        document.getElementById('previewGender').textContent = gVal;
+
+        var addr = document.getElementById('address').value.trim();
+        document.getElementById('previewAddress').textContent = addr ? (addr.length > 20 ? addr.substring(0, 20) + '…' : addr) : '—';
+
+        calcCompletion();
+      }
+
+      ['firstName', 'lastName', 'email', 'phone', 'gender', 'dob', 'department', 'address'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) { el.addEventListener('input', updatePreview); el.addEventListener('change', updatePreview); }
+      });
+
+      /* ── Password Toggles ── */
+      function makePwToggle(btnId, inputId) {
+        document.getElementById(btnId).addEventListener('click', function () {
+          var inp = document.getElementById(inputId);
+          var show = inp.type === 'password';
+          inp.type = show ? 'text' : 'password';
+          var svg = this.querySelector('svg');
+          svg.innerHTML = show
+            ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+            : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+        });
+      }
+      makePwToggle('pwToggle1', 'password');
+      makePwToggle('pwToggle2', 'confirmPassword');
+
+      /* ── File Upload / Photo Preview ── */
+      var fileInput = document.getElementById('profilePic');
+      var fileText = document.getElementById('fileText');
+      var previewStrip = document.getElementById('previewStrip');
+      var previewThumb = document.getElementById('previewThumb');
+      var ringImg = document.getElementById('avatarRingImg');
+      var initialsEl = document.getElementById('avatarInitials');
+
+      function fmtSize(b) {
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(1) + ' MB';
+      }
+
+      var sidebarAvatarImg = document.getElementById('sidebarAvatarImg');
+      var sidebarAvatarInitial = document.getElementById('sidebarAvatarInitial');
+
+      fileInput.addEventListener('change', function () {
+        var f = fileInput.files[0];
+        if (!f) return;
+        fileText.textContent = f.name;
+        document.getElementById('previewFileName').textContent = f.name;
+        document.getElementById('previewFileSize').textContent = fmtSize(f.size);
+        previewStrip.classList.add('visible');
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          previewThumb.src = e.target.result;
+          ringImg.src = e.target.result;
+          ringImg.style.display = 'block';
+          initialsEl.style.display = 'none';
+          /* ── Update sidebar avatar ── */
+          sidebarAvatarImg.src = e.target.result;
+          sidebarAvatarImg.style.display = 'block';
+          sidebarAvatarInitial.style.display = 'none';
+        };
+        reader.readAsDataURL(f);
+        calcCompletion();
+      });
+
+      document.getElementById('removePhoto').addEventListener('click', function () {
+        fileInput.value = '';
+        fileText.textContent = 'No file chosen — click to browse';
+        previewStrip.classList.remove('visible');
+        ringImg.style.display = 'none';
+        ringImg.src = '';
+        initialsEl.style.display = '';
+        /* ── Reset sidebar avatar ── */
+        sidebarAvatarImg.src = '';
+        sidebarAvatarImg.style.display = 'none';
+        sidebarAvatarInitial.style.display = '';
+        calcCompletion();
+      });
+
+      /* ── Form Submit ── */
+      document.getElementById('profileForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        /* required fields */
+        var ok = true;
+        ['firstName', 'lastName', 'email'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el.value.trim()) {
+            el.classList.add('error');
+            ok = false;
+            setTimeout(function () { el.classList.remove('error'); }, 2500);
+          }
+        });
+        if (!ok) return;
+
+        /* password match */
+        var pw = document.getElementById('password').value;
+        var cpw = document.getElementById('confirmPassword').value;
+        if (pw && pw !== cpw) {
+          var cpwEl = document.getElementById('confirmPassword');
+          cpwEl.classList.add('error');
+          setTimeout(function () { cpwEl.classList.remove('error'); }, 2500);
+          return;
+        }
+
+        var alertEl = document.getElementById('alertSuccess');
+        alertEl.classList.remove('hidden');
+        document.querySelector('.content').scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(function () { alertEl.classList.add('hidden'); }, 4000);
+        updatePreview();
+      });
+
+      /* ── Reset ── */
+      document.getElementById('resetBtn').addEventListener('click', function () {
+        document.getElementById('profileForm').reset();
+        fileText.textContent = 'No file chosen — click to browse';
+        previewStrip.classList.remove('visible');
+        ringImg.style.display = 'none';
+        ringImg.src = '';
+        initialsEl.style.display = '';
+        updatePreview();
+      });
+
+      /* ── Init ── */
+      updatePreview();
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var count = parseInt(localStorage.getItem('notifUnread') || '3', 10);
+        var badge = document.getElementById('navBadge');
+        if (badge) { if (count > 0) { badge.textContent = count; badge.style.display = ''; } else { badge.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
