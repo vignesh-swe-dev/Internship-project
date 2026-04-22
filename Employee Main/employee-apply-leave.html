@@ -1,0 +1,1193 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .25);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --blue: #1a6eff;
+      --blue-dim: rgba(26, 110, 255, .3);
+      --blue-glow: 0 0 14px rgba(26, 110, 255, .4);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(0, 230, 118, .1);
+      color: var(--green);
+      border-left-color: var(--green);
+      box-shadow: inset 0 0 16px rgba(0, 230, 118, .06)
+    }
+
+    /* ── MAIN ── */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 18px
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ── ALERT BANNER ── */
+    .alert-banner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 18px;
+      border-radius: 8px;
+      font-size: .84rem;
+      font-weight: 600;
+      animation: slideDown .35s ease
+    }
+
+    .alert-banner.success {
+      background: linear-gradient(90deg, rgba(0, 230, 118, .18), rgba(0, 230, 118, .08));
+      border: 1px solid rgba(0, 230, 118, .4);
+      color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .alert-banner.error {
+      background: linear-gradient(90deg, rgba(255, 58, 74, .15), rgba(255, 58, 74, .06));
+      border: 1px solid rgba(255, 58, 74, .4);
+      color: var(--red);
+      box-shadow: var(--red-glow)
+    }
+
+    .alert-banner svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .alert-banner.show {
+      display: flex
+    }
+
+    /* ── FORM CARD ── */
+    .form-card {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .06);
+      overflow: hidden
+    }
+
+    .card-header {
+      padding: 14px 20px;
+      background: linear-gradient(90deg, var(--blue) 0%, #0047cc 100%);
+      position: relative;
+      overflow: hidden
+    }
+
+    .card-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 70%, rgba(255, 255, 255, .06));
+      pointer-events: none
+    }
+
+    .card-header h2 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1
+    }
+
+    .card-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px
+    }
+
+    /* ── FIELDS ── */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px
+    }
+
+    .field-label {
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .3px
+    }
+
+    .field-label span {
+      color: var(--red);
+      margin-left: 2px
+    }
+
+    .field-input,
+    .field-textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(15, 22, 32, .9);
+      border: 1px solid rgba(14, 239, 255, .2);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .25s, box-shadow .25s, background .2s
+    }
+
+    .field-input:focus,
+    .field-textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .12);
+      background: rgba(20, 28, 42, .95)
+    }
+
+    .field-input:hover,
+    .field-textarea:hover {
+      border-color: rgba(14, 239, 255, .35)
+    }
+
+    .field-textarea {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.6
+    }
+
+    .field-input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.7) sepia(1) saturate(4) hue-rotate(175deg);
+      cursor: pointer;
+      opacity: .8
+    }
+
+    .field-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1
+    }
+
+    .char-count {
+      font-size: .7rem;
+      color: var(--text-dim);
+      text-align: right;
+      margin-top: 3px
+    }
+
+    .char-count.warn {
+      color: var(--amber)
+    }
+
+    .char-count.limit {
+      color: var(--red)
+    }
+
+    .field-error {
+      font-size: .72rem;
+      color: var(--red);
+      margin-top: 3px;
+      display: none
+    }
+
+    .field-group.invalid .field-input,
+    .field-group.invalid .field-textarea {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(255, 58, 74, .1)
+    }
+
+    .field-group.invalid .field-error {
+      display: block
+    }
+
+    /* ── SUBMIT BTN ── */
+    .btn-submit {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 20px;
+      background: linear-gradient(90deg, var(--blue), #0047cc);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .88rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .2s, filter .2s, transform .15s;
+      box-shadow: 0 2px 14px rgba(26, 110, 255, .35);
+      letter-spacing: .3px
+    }
+
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 60%, rgba(255, 255, 255, .08));
+      pointer-events: none
+    }
+
+    .btn-submit:hover {
+      box-shadow: 0 4px 24px rgba(26, 110, 255, .55);
+      filter: brightness(1.08)
+    }
+
+    .btn-submit:active {
+      transform: scale(.98)
+    }
+
+    .btn-submit:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      filter: none;
+      transform: none
+    }
+
+    /* ── HISTORY CARD ── */
+    .history-card {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .06);
+      overflow: hidden
+    }
+
+    .history-card-header {
+      padding: 13px 20px;
+      background: linear-gradient(90deg, var(--blue) 0%, #0047cc 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .history-card-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 70%, rgba(255, 255, 255, .06));
+      pointer-events: none
+    }
+
+    .history-card-header h2 {
+      font-size: .88rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1
+    }
+
+    .history-count {
+      background: rgba(255, 255, 255, .18);
+      color: #fff;
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      position: relative;
+      z-index: 1
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px
+    }
+
+    thead tr {
+      background: rgba(26, 110, 255, .15);
+      border-bottom: 2px solid rgba(26, 110, 255, .3)
+    }
+
+    thead th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: .74rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, .9);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      border-right: 1px solid rgba(26, 110, 255, .2)
+    }
+
+    thead th:last-child {
+      border-right: none
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .15s
+    }
+
+    tbody tr:last-child {
+      border-bottom: none
+    }
+
+    tbody tr:hover {
+      background: rgba(14, 239, 255, .04)
+    }
+
+    td {
+      padding: 13px 16px;
+      font-size: .82rem;
+      color: var(--text);
+      vertical-align: middle;
+      border-right: 1px solid rgba(14, 239, 255, .06)
+    }
+
+    td:last-child {
+      border-right: none
+    }
+
+    td.id-col {
+      color: var(--text-dim);
+      font-size: .78rem;
+      width: 70px;
+      text-align: center
+    }
+
+    td.date-col {
+      white-space: nowrap;
+      color: var(--text-dim);
+      font-size: .8rem;
+      min-width: 130px
+    }
+
+    td.msg-col {
+      line-height: 1.5;
+      min-width: 200px
+    }
+
+    td.status-col {
+      white-space: nowrap;
+      min-width: 110px
+    }
+
+    /* ── STATUS BADGES ── */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 700;
+      border: 1px solid currentColor;
+      letter-spacing: .4px;
+      white-space: nowrap
+    }
+
+    .status-badge.pending {
+      color: var(--amber);
+      background: rgba(255, 170, 0, .12);
+      border-color: rgba(255, 170, 0, .35)
+    }
+
+    .status-badge.approved {
+      color: var(--green);
+      background: rgba(0, 230, 118, .1);
+      border-color: rgba(0, 230, 118, .3)
+    }
+
+    .status-badge.rejected {
+      color: var(--red);
+      background: rgba(255, 58, 74, .1);
+      border-color: rgba(255, 58, 74, .3)
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 36px 20px;
+      color: var(--text-dim)
+    }
+
+    .empty-state svg {
+      width: 44px;
+      height: 44px;
+      opacity: .25
+    }
+
+    .empty-state h3 {
+      font-size: .88rem;
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .empty-state p {
+      font-size: .76rem
+    }
+
+    /* ── NAV BADGE ── */
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 170, 0, .5)
+      }
+
+      50% {
+        opacity: .85;
+        box-shadow: 0 0 0 4px rgba(255, 170, 0, 0)
+      }
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+        transform: translateY(5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .fade-in {
+      animation: fadeSlide .3s ease
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" style="display:block;" />
+      <span class="sidebar-title">Employee Panel</span>
+    </div>
+
+    <div class="user-card">
+      <div class="user-avatar">F</div>
+      <div class="user-info">
+        <div class="user-name">Frontend, Employee</div>
+        <div class="user-role">Frontend Developer</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="employee-home.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="employee-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="employee-view-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <polyline points="12 12 15 14" />
+        </svg>
+        <span>View Salary</span>
+      </a>
+      <a href="employee-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="employee-notifications.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>View Notifications</span>
+        <span class="nav-badge" id="navBadge">3</span>
+      </a>
+      <a href="employee-apply-leave.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        <span>Apply For Leave</span>
+      </a>
+      <a href="employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Feedback</span>
+      </a>
+      <a href="relieving-letter-complete.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg>
+        <span>Relieving Letter</span>
+      </a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Apply for leave</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="employee-home.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Apply for leave</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ── Alert Banner ── -->
+      <div class="alert-banner" id="alertBanner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="alertIcon">
+          <polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <span id="alertMsg">Application for leave has been submitted for review</span>
+      </div>
+
+      <!-- ── Apply Form Card ── -->
+      <div class="form-card">
+        <div class="card-header">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="width:16px;height:16px">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 8h6m-6 4h6m-6 4h4" />
+            </svg>
+            Apply for leave
+          </h2>
+        </div>
+        <div class="card-body">
+
+          <!-- Date -->
+          <div class="field-group" id="fg-date">
+            <label class="field-label" for="leaveDate">Date: <span>*</span></label>
+            <input class="field-input" type="date" id="leaveDate" required />
+            <span class="field-error" id="err-date">Please select a leave date.</span>
+          </div>
+
+          <!-- Message -->
+          <div class="field-group" id="fg-msg">
+            <label class="field-label" for="leaveMsg">Message: <span>*</span></label>
+            <textarea class="field-textarea" id="leaveMsg" placeholder="Describe your reason for leave…" maxlength="500"
+              oninput="updateCharCount()"></textarea>
+            <div class="char-count" id="charCount">0 / 500</div>
+            <span class="field-error" id="err-msg">Please enter a message (min. 10 characters).</span>
+          </div>
+
+          <!-- Submit -->
+          <button class="btn-submit" id="submitBtn" onclick="submitLeave()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="width:17px;height:17px">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 8h6m-6 4h6m-6 4h4" />
+            </svg>
+            Apply For Leave
+          </button>
+
+        </div>
+      </div>
+
+      <!-- ── Leave History Card ── -->
+      <div class="history-card">
+        <div class="history-card-header">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="width:16px;height:16px">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            Apply for leave
+          </h2>
+          <span class="history-count" id="historyCount">1 record</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Message</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="leaveTableBody"></tbody>
+          </table>
+          <div class="empty-state" id="emptyState" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <path d="M9 8h6m-6 4h6m-6 4h4" />
+            </svg>
+            <h3>No leave applications</h3>
+            <p>Your submitted applications will appear here.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ── Matrix Rain ── */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオカキクケコ01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.55)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.18)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++;
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Leave store — pre-filled from screenshot ── */
+      var leaveApps = [
+        {
+          id: 1,
+          date: '2023-09-06',
+          msg: "I have a previously scheduled doctor's appointment that I can't miss.",
+          status: 'pending'
+        }
+      ];
+      var nextId = 2;
+
+      /* ── Char counter ── */
+      window.updateCharCount = function () {
+        var txt = document.getElementById('leaveMsg').value, len = txt.length;
+        var cc = document.getElementById('charCount');
+        cc.textContent = len + ' / 500';
+        cc.className = 'char-count' + (len > 450 ? ' warn' : '') + (len >= 500 ? ' limit' : '');
+      };
+
+      /* ── Validate ── */
+      function validate() {
+        var dateVal = document.getElementById('leaveDate').value;
+        var msgVal = document.getElementById('leaveMsg').value.trim();
+        var valid = true;
+        var fgDate = document.getElementById('fg-date');
+        var fgMsg = document.getElementById('fg-msg');
+        fgDate.classList.remove('invalid'); fgMsg.classList.remove('invalid');
+        if (!dateVal) { fgDate.classList.add('invalid'); valid = false }
+        if (msgVal.length < 10) { fgMsg.classList.add('invalid'); valid = false }
+        return valid
+      }
+
+      /* ── Submit ── */
+      window.submitLeave = function () {
+        if (!validate()) return;
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:17px;height:17px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-9-9"/></svg> Submitting…';
+        setTimeout(function () {
+          var dateVal = document.getElementById('leaveDate').value;
+          var msgVal = document.getElementById('leaveMsg').value.trim();
+          leaveApps.push({ id: nextId++, date: dateVal, msg: msgVal, status: 'pending' });
+          /* Reset */
+          document.getElementById('leaveDate').value = '';
+          document.getElementById('leaveMsg').value = '';
+          document.getElementById('charCount').textContent = '0 / 500';
+          document.getElementById('fg-date').classList.remove('invalid');
+          document.getElementById('fg-msg').classList.remove('invalid');
+          btn.disabled = false;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:17px;height:17px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8h6m-6 4h6m-6 4h4"/></svg> Apply For Leave';
+          showAlert('Application for leave has been submitted for review', 'success');
+          renderTable()
+        }, 900)
+      };
+
+      /* ── Format date ── */
+      function fmtDate(d) { return d }   // already YYYY-MM-DD
+
+      /* ── Escape HTML ── */
+      function escHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+
+      /* ── Render table ── */
+      function renderTable() {
+        var tbody = document.getElementById('leaveTableBody');
+        var empty = document.getElementById('emptyState');
+        var count = document.getElementById('historyCount');
+        tbody.innerHTML = '';
+        count.textContent = leaveApps.length + ' record' + (leaveApps.length !== 1 ? 's' : '');
+        if (!leaveApps.length) { empty.style.display = 'flex'; return }
+        empty.style.display = 'none';
+        leaveApps.forEach(function (app) {
+          var labels = { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' };
+          var tr = document.createElement('tr');
+          tr.className = 'fade-in';
+          tr.innerHTML =
+            '<td class="id-col">' + app.id + '</td>' +
+            '<td class="date-col">' + fmtDate(app.date) + '</td>' +
+            '<td class="msg-col">' + escHtml(app.msg) + '</td>' +
+            '<td class="status-col"><span class="status-badge ' + app.status + '">' + (labels[app.status] || app.status) + '</span></td>';
+          tbody.appendChild(tr)
+        })
+      }
+
+      /* ── Alert banner ── */
+      function showAlert(msg, type) {
+        var banner = document.getElementById('alertBanner');
+        var icon = document.getElementById('alertIcon');
+        var msgEl = document.getElementById('alertMsg');
+        msgEl.textContent = msg;
+        banner.className = 'alert-banner ' + type + ' show';
+        icon.innerHTML = type === 'success'
+          ? '<polyline points="20 6 9 17 4 12" stroke-linecap="round" stroke-linejoin="round"/>'
+          : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="20" x2="12.01" y2="20"/>';
+        clearTimeout(banner._t);
+        banner._t = setTimeout(function () { banner.classList.remove('show') }, 4500)
+      }
+
+      /* ── Sidebar toggle ── */
+      var mt = document.getElementById('menuToggle'), sb = document.querySelector('.sidebar');
+      mt && mt.addEventListener('click', function () { sb.classList.toggle('open') });
+      document.addEventListener('click', function (e) { if (!sb.contains(e.target) && !mt.contains(e.target)) sb.classList.remove('open') });
+
+      /* ── Init ── */
+      renderTable();
+      /* Show banner pre-filled as in screenshot */
+      setTimeout(function () { showAlert('Application for leave has been submitted for review', 'success') }, 600);
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var count = parseInt(localStorage.getItem('notifUnread') || '3', 10);
+        var badge = document.getElementById('navBadge');
+        if (badge) { if (count > 0) { badge.textContent = count; badge.style.display = ''; } else { badge.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
