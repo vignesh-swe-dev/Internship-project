@@ -1,0 +1,2492 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #a855f7;
+      --purple-dim: rgba(168, 85, 247, .25);
+      --purple-glow: 0 0 12px rgba(168, 85, 247, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navBadgePulse 2s infinite
+    }
+
+    @keyframes navBadgePulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 170, 0, .5)
+      }
+
+      50% {
+        opacity: .85;
+        box-shadow: 0 0 0 4px rgba(255, 170, 0, 0)
+      }
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(168, 85, 247, .12);
+      color: var(--purple);
+      border-left-color: var(--purple);
+      box-shadow: inset 0 0 16px rgba(168, 85, 247, .08)
+    }
+
+    /* ── MAIN ── */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, border-color .2s
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ── STAT CARDS ── */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      background: rgba(15, 22, 32, .9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s, transform .2s
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, currentColor 100%);
+      opacity: .06;
+      pointer-events: none
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px)
+    }
+
+    .stat-card.cyan {
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .stat-card.cyan:hover {
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .stat-card.green {
+      color: var(--green);
+      border-color: var(--green-dim)
+    }
+
+    .stat-card.green:hover {
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .stat-card.red {
+      color: var(--red);
+      border-color: var(--red-dim)
+    }
+
+    .stat-card.red:hover {
+      border-color: var(--red);
+      box-shadow: var(--red-glow)
+    }
+
+    .stat-card.amber {
+      color: var(--amber);
+      border-color: var(--amber-dim)
+    }
+
+    .stat-card.amber:hover {
+      border-color: var(--amber);
+      box-shadow: var(--amber-glow)
+    }
+
+    .stat-card.purple {
+      color: var(--purple);
+      border-color: var(--purple-dim)
+    }
+
+    .stat-card.purple:hover {
+      border-color: var(--purple);
+      box-shadow: var(--purple-glow)
+    }
+
+    .stat-icon {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: rgba(20, 28, 42, .8);
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 0 8px currentColor)
+    }
+
+    .stat-icon svg {
+      width: 40px;
+      height: 40px
+    }
+
+    .stat-body {
+      flex: 1
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+      text-shadow: 0 0 12px currentColor
+    }
+
+    .stat-label {
+      font-size: .73rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      letter-spacing: .5px
+    }
+
+    /* ── PANEL GRID ── */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .08);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .15), inset 0 1px 0 rgba(14, 239, 255, .12)
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(15, 22, 32, .7);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .panel-title {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .5px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .panel-title svg {
+      width: 14px;
+      height: 14px;
+      color: var(--purple)
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 6px
+    }
+
+    .panel-btn {
+      width: 24px;
+      height: 24px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-dim);
+      font-size: .9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .panel-btn:hover {
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .panel-body {
+      padding: 20px
+    }
+
+    /* ── STATUS BANNER ── */
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid;
+      position: relative;
+      overflow: hidden
+    }
+
+    .status-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, currentColor, transparent);
+      opacity: .06;
+      pointer-events: none
+    }
+
+    .status-banner.issued {
+      background: rgba(0, 230, 118, .06);
+      border-color: rgba(0, 230, 118, .3);
+      color: var(--green)
+    }
+
+    .status-banner.pending {
+      background: rgba(255, 170, 0, .06);
+      border-color: rgba(255, 170, 0, .3);
+      color: var(--amber)
+    }
+
+    .status-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(20, 28, 42, .8);
+      border: 1.5px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 6px currentColor)
+    }
+
+    .status-icon svg {
+      width: 22px;
+      height: 22px
+    }
+
+    .status-text h3 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px
+    }
+
+    .status-text p {
+      font-size: .76rem;
+      color: var(--text-dim);
+      line-height: 1.5
+    }
+
+    /* ── INFO ROWS ── */
+    .info-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(15, 22, 32, .7);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: .82rem;
+      transition: background .2s, border-color .2s
+    }
+
+    .info-row:hover {
+      background: rgba(15, 22, 32, .9);
+      border-color: var(--cyan-dim)
+    }
+
+    .info-key {
+      color: var(--text-dim);
+      font-size: .74rem;
+      font-weight: 600;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .info-key svg {
+      width: 13px;
+      height: 13px;
+      color: var(--purple)
+    }
+
+    .info-val {
+      color: #fff;
+      font-weight: 600
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 700;
+      border: 1px solid currentColor
+    }
+
+    .tag.green {
+      color: var(--green);
+      background: rgba(0, 230, 118, .1)
+    }
+
+    .tag.amber {
+      color: var(--amber);
+      background: rgba(255, 170, 0, .1)
+    }
+
+    .tag.purple {
+      color: var(--purple);
+      background: rgba(168, 85, 247, .1)
+    }
+
+    .tag.cyan {
+      color: var(--cyan);
+      background: rgba(14, 239, 255, .08)
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .action-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      transition: box-shadow .2s, filter .2s, opacity .2s;
+      text-decoration: none
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .btn-purple {
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(124, 58, 237, .3);
+      animation: purplePulse 2.6s ease-in-out infinite
+    }
+
+    .btn-purple:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 28px rgba(124, 58, 237, .6)
+    }
+
+    @keyframes purplePulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 16px rgba(124, 58, 237, .3)
+      }
+
+      50% {
+        box-shadow: 0 0 28px rgba(124, 58, 237, .6), 0 0 50px rgba(124, 58, 237, .15)
+      }
+    }
+
+    .btn-outline-cyan {
+      background: rgba(14, 239, 255, .07);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim)
+    }
+
+    .btn-outline-cyan:hover {
+      background: rgba(14, 239, 255, .15);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-outline-green {
+      background: rgba(0, 230, 118, .07);
+      color: var(--green);
+      border: 1px solid var(--green-dim)
+    }
+
+    .btn-outline-green:hover {
+      background: rgba(0, 230, 118, .15);
+      box-shadow: var(--green-glow)
+    }
+
+    .btn-outline-amber {
+      background: rgba(255, 170, 0, .07);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim)
+    }
+
+    .btn-outline-amber:hover {
+      background: rgba(255, 170, 0, .15);
+      box-shadow: var(--amber-glow)
+    }
+
+    /* ── LETTER PREVIEW PANEL ── */
+    .letter-panel {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(168, 85, 247, .25);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .5), 0 0 0 1px rgba(168, 85, 247, .08);
+      overflow: hidden;
+      margin-bottom: 20px;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .letter-panel:hover {
+      border-color: rgba(168, 85, 247, .45);
+      box-shadow: 0 4px 32px rgba(168, 85, 247, .18)
+    }
+
+    .letter-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      background: linear-gradient(90deg, rgba(124, 58, 237, .15), rgba(79, 70, 229, .08));
+      border-bottom: 1px solid rgba(168, 85, 247, .18)
+    }
+
+    .letter-panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--purple);
+      letter-spacing: .5px;
+      text-transform: uppercase
+    }
+
+    .letter-panel-title svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .letter-panel-actions {
+      display: flex;
+      gap: 8px
+    }
+
+    .lp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      border-radius: 6px;
+      font-size: .74rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .lp-btn svg {
+      width: 13px;
+      height: 13px
+    }
+
+    .lp-btn-print {
+      background: rgba(168, 85, 247, .12);
+      border: 1px solid var(--purple-dim);
+      color: var(--purple)
+    }
+
+    .lp-btn-print:hover {
+      background: rgba(168, 85, 247, .25);
+      box-shadow: var(--purple-glow)
+    }
+
+    .lp-btn-dl {
+      background: rgba(0, 230, 118, .1);
+      border: 1px solid var(--green-dim);
+      color: var(--green)
+    }
+
+    .lp-btn-dl:hover {
+      background: rgba(0, 230, 118, .2);
+      box-shadow: var(--green-glow)
+    }
+
+    .lp-btn-send {
+      background: rgba(255, 170, 0, .1);
+      border: 1px solid var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .lp-btn-send:hover {
+      background: rgba(255, 170, 0, .2);
+      box-shadow: var(--amber-glow)
+    }
+
+    /* ── ACTUAL LETTER PAPER ── */
+    .letter-wrap {
+      padding: 24px;
+      background: rgba(15, 22, 32, .4)
+    }
+
+    .letter-paper {
+      background: #fff;
+      color: #1a1a2e;
+      border-radius: 6px;
+      padding: 44px 48px;
+      box-shadow: 0 6px 40px rgba(0, 0, 0, .7), 0 0 0 1px rgba(168, 85, 247, .15);
+      font-family: 'Georgia', Georgia, serif;
+      line-height: 1.75;
+      position: relative;
+      overflow: hidden;
+      max-width: 780px;
+      margin: 0 auto
+    }
+
+    .letter-paper::before {
+      content: 'OFFICIAL';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 6rem;
+      font-weight: 900;
+      color: rgba(124, 58, 237, .05);
+      letter-spacing: 8px;
+      pointer-events: none;
+      white-space: nowrap;
+      user-select: none
+    }
+
+    .letter-co-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 2.5px solid #3b0764;
+      margin-bottom: 10px
+    }
+
+    .letter-co-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 12px rgba(124, 58, 237, .4)
+    }
+
+    .letter-co-logo svg {
+      width: 30px;
+      height: 30px;
+      color: #fff
+    }
+
+    .letter-co-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #3b0764;
+      letter-spacing: .5px
+    }
+
+    .letter-co-addr {
+      font-size: .72rem;
+      color: #666;
+      margin-top: 2px
+    }
+
+    .letter-date {
+      text-align: right;
+      font-size: .82rem;
+      color: #555;
+      margin: 14px 0 22px
+    }
+
+    .letter-subject {
+      font-size: .95rem;
+      font-weight: 700;
+      color: #1a1a2e;
+      padding: 10px 16px;
+      background: linear-gradient(90deg, rgba(124, 58, 237, .07), transparent);
+      border-left: 3.5px solid #7c3aed;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 22px;
+      letter-spacing: .3px
+    }
+
+    .letter-body {
+      font-size: .88rem;
+      color: #2d2d2d
+    }
+
+    .letter-body p {
+      margin-bottom: 14px
+    }
+
+    .hl {
+      font-weight: 700;
+      color: #3b0764
+    }
+
+    .letter-closing {
+      margin-top: 28px;
+      font-size: .87rem;
+      color: #2d2d2d
+    }
+
+    .letter-sig {
+      margin-top: 36px
+    }
+
+    .letter-sig-line {
+      width: 160px;
+      height: 2px;
+      background: #3b0764;
+      margin-bottom: 8px;
+      border-radius: 1px
+    }
+
+    .letter-sig-name {
+      font-weight: 700;
+      font-size: .92rem;
+      color: #1a1a2e
+    }
+
+    .letter-sig-role {
+      font-size: .78rem;
+      color: #666;
+      margin-top: 2px
+    }
+
+    .letter-seal {
+      position: absolute;
+      bottom: 32px;
+      right: 40px;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 3px solid rgba(124, 58, 237, .28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .letter-seal-inner {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1.5px dashed rgba(124, 58, 237, .2);
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .letter-seal-text {
+      font-size: .38rem;
+      font-weight: 800;
+      color: rgba(124, 58, 237, .4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+      line-height: 1.5
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #fff;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    .toast svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
+
+    .toast.success {
+      background: rgba(0, 230, 118, .15);
+      border: 1px solid var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .toast.info {
+      background: rgba(168, 85, 247, .15);
+      border: 1px solid var(--purple);
+      box-shadow: var(--purple-glow)
+    }
+
+    .toast.error {
+      background: rgba(255, 58, 74, .15);
+      border: 1px solid var(--red);
+      box-shadow: var(--red-glow)
+    }
+
+    /* ════════════════════════════════════════════
+       ── SEND MODAL OVERLAY ──
+    ════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 8, .82);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .modal {
+      background: rgba(10, 15, 24, .98);
+      border: 1px solid rgba(255, 170, 0, .3);
+      border-radius: 14px;
+      width: 520px;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 0 60px rgba(255, 170, 0, .12), 0 24px 60px rgba(0, 0, 0, .7);
+      overflow: hidden;
+      transform: translateY(20px) scale(.97);
+      transition: transform .3s
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1)
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      background: linear-gradient(90deg, rgba(255, 170, 0, .1), rgba(255, 170, 0, .03));
+      border-bottom: 1px solid rgba(255, 170, 0, .15)
+    }
+
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .92rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: .5px
+    }
+
+    .modal-title svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 170, 0, .08);
+      border: 1px solid rgba(255, 170, 0, .2);
+      border-radius: 6px;
+      color: var(--amber);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 170, 0, .18);
+      box-shadow: var(--amber-glow)
+    }
+
+    .modal-body {
+      padding: 22px
+    }
+
+    /* Recipient selector */
+    .recipient-label {
+      font-size: .74rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 10px
+    }
+
+    .recipient-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px
+    }
+
+    .recipient-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: rgba(15, 22, 32, .8);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, box-shadow .2s;
+      position: relative
+    }
+
+    .recipient-card:hover {
+      background: rgba(255, 170, 0, .05);
+      border-color: rgba(255, 170, 0, .3)
+    }
+
+    .recipient-card.selected {
+      border-color: var(--amber);
+      background: rgba(255, 170, 0, .08);
+      box-shadow: 0 0 16px rgba(255, 170, 0, .15)
+    }
+
+    .recipient-card.selected .rc-check {
+      opacity: 1;
+      transform: scale(1)
+    }
+
+    .rc-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      border: 2px solid currentColor
+    }
+
+    .rc-avatar.ceo {
+      color: var(--purple);
+      background: rgba(168, 85, 247, .12)
+    }
+
+    .rc-avatar.mgr {
+      color: var(--cyan);
+      background: rgba(14, 239, 255, .08)
+    }
+
+    .rc-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .rc-name {
+      font-size: .82rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .rc-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 2px
+    }
+
+    .rc-check {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 18px;
+      height: 18px;
+      background: var(--amber);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transform: scale(.6);
+      transition: opacity .2s, transform .2s
+    }
+
+    .rc-check svg {
+      width: 10px;
+      height: 10px;
+      color: #000
+    }
+
+    /* Message textarea */
+    .form-group {
+      margin-bottom: 16px
+    }
+
+    .form-label {
+      display: block;
+      font-size: .74rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      background: rgba(15, 22, 32, .8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: .84rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      resize: none
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(255, 170, 0, .1)
+    }
+
+    .form-textarea {
+      height: 100px;
+      line-height: 1.6
+    }
+
+    /* Priority selector */
+    .priority-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px
+    }
+
+    .priority-opt {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: rgba(15, 22, 32, .7);
+      color: var(--text-dim);
+      font-size: .74rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, color .2s
+    }
+
+    .priority-opt:hover {
+      border-color: rgba(14, 239, 255, .3);
+      color: var(--text)
+    }
+
+    .priority-opt.active-normal {
+      border-color: var(--cyan);
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan)
+    }
+
+    .priority-opt.active-urgent {
+      border-color: var(--amber);
+      background: rgba(255, 170, 0, .08);
+      color: var(--amber)
+    }
+
+    .priority-opt.active-high {
+      border-color: var(--red);
+      background: rgba(255, 58, 74, .08);
+      color: var(--red)
+    }
+
+    /* Modal footer */
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      background: rgba(15, 22, 32, .5);
+      border-top: 1px solid var(--border)
+    }
+
+    .modal-footer-note {
+      font-size: .72rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .modal-footer-note svg {
+      width: 12px;
+      height: 12px;
+      color: var(--amber)
+    }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px
+    }
+
+    .btn-cancel {
+      background: rgba(255, 58, 74, .07);
+      color: var(--red);
+      border: 1px solid var(--red-dim);
+      padding: 9px 18px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .btn-cancel:hover {
+      background: rgba(255, 58, 74, .15);
+      box-shadow: var(--red-glow)
+    }
+
+    .btn-send-confirm {
+      background: linear-gradient(90deg, #d97706, #f59e0b);
+      color: #000;
+      border: none;
+      padding: 9px 22px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: filter .2s, box-shadow .2s
+    }
+
+    .btn-send-confirm svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .btn-send-confirm:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 20px rgba(245, 158, 11, .4)
+    }
+
+    .btn-send-confirm:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      filter: none
+    }
+
+    /* Sending animation */
+    .sending-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 15, 24, .92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      border-radius: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s
+    }
+
+    .sending-overlay.show {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .send-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255, 170, 0, .2);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin .8s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .sending-text {
+      color: var(--amber);
+      font-size: .88rem;
+      font-weight: 700;
+      letter-spacing: .5px
+    }
+
+    .sending-sub {
+      color: var(--text-dim);
+      font-size: .74rem
+    }
+
+    /* Success state */
+    .send-success {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      display: none
+    }
+
+    .send-success-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(0, 230, 118, .1);
+      border: 2px solid var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 0 12px var(--green));
+      animation: popIn .4s cubic-bezier(.175, .885, .32, 1.275) forwards
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(.5);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .send-success-icon svg {
+      width: 28px;
+      height: 28px;
+      color: var(--green)
+    }
+
+    .send-success-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .send-success-sub {
+      font-size: .78rem;
+      color: var(--text-dim);
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.5
+    }
+
+    /* Send history row */
+    .send-history {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: rgba(255, 170, 0, .05);
+      border: 1px solid rgba(255, 170, 0, .15);
+      border-radius: 8px;
+      font-size: .76rem;
+      color: var(--text-dim);
+      display: none;
+      align-items: center;
+      gap: 8px
+    }
+
+    .send-history.visible {
+      display: flex
+    }
+
+    .send-history svg {
+      width: 13px;
+      height: 13px;
+      color: var(--amber);
+      flex-shrink: 0
+    }
+
+    .send-history strong {
+      color: var(--amber)
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      body {
+        background: #fff !important;
+        display: block !important
+      }
+
+      .sidebar,
+      .header,
+      .stat-cards,
+      .panel-grid,
+      .letter-panel-header,
+      #matrixCanvas,
+      body::after,
+      .footer,
+      .toast,
+      .modal-overlay {
+        display: none !important
+      }
+
+      .main-wrap,
+      .content {
+        display: block !important;
+        overflow: visible !important
+      }
+
+      .letter-panel {
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important
+      }
+
+      .letter-wrap {
+        padding: 0 !important;
+        background: transparent !important
+      }
+
+      .letter-paper {
+        box-shadow: none !important;
+        border: 1px solid #e0e0e0 !important;
+        max-width: 100% !important;
+        padding: 32px !important
+      }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .stat-cards {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .panel-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width: 500px) {
+      .stat-cards {
+        grid-template-columns: 1fr
+      }
+
+      .letter-paper {
+        padding: 24px 20px
+      }
+
+      .recipient-cards {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn .35s ease forwards
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="data:image/png;base64,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" alt="TES Logo" width="40" height="40" style="display:block;border-radius:6px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <div style="display:none;width:40px;height:40px;background:linear-gradient(135deg,#6a1fa0,#e85d00);border-radius:8px;align-items:center;justify-content:center;flex-shrink:0;"><span style="color:#fff;font-weight:900;font-size:.7rem;">TES</span></div>
+      <span class="sidebar-title">Employee Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">F</div>
+      <div class="user-info">
+        <div class="user-name">Frontend, Employee</div>
+        <div class="user-role">Developer</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="employee-home.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="employee-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="employee-view-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span>View Salary</span>
+      </a>
+      <a href="employee-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>View Attendance</span>
+      </a>
+      <a href="employee-notifications.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>View Notifications</span>
+        <span class="nav-badge" id="navBadge">3</span>
+      </a>
+      <a href="employee-apply-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        <span>Apply For Leave</span>
+      </a>
+      <a href="employee-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Feedback</span>
+      </a>
+      <a href="relieving-letter-complete.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg>
+        <span>Relieving Letter</span>
+      </a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Relieving Letter</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="employee-home.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Relieving Letter</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- ── STAT CARDS ── -->
+      <div class="stat-cards">
+        <div class="stat-card green fade-in" style="animation-delay:.05s">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M12 10h40a4 4 0 0 1 4 4v36a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z" />
+              <polyline points="22 32 28 38 42 24" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="statStatus">Issued</div>
+            <div class="stat-label">Letter Status</div>
+          </div>
+        </div>
+        <div class="stat-card cyan fade-in" style="animation-delay:.1s">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <rect x="8" y="14" width="48" height="42" rx="4" />
+              <line x1="8" y1="26" x2="56" y2="26" />
+              <line x1="20" y1="8" x2="20" y2="20" />
+              <line x1="44" y1="8" x2="44" y2="20" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="statIssued" style="font-size:1rem;margin-top:4px">02 Jan, 2025</div>
+            <div class="stat-label">Issued On</div>
+          </div>
+        </div>
+        <div class="stat-card red fade-in" style="animation-delay:.15s">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <rect x="8" y="14" width="48" height="42" rx="4" />
+              <line x1="8" y1="26" x2="56" y2="26" />
+              <line x1="20" y1="8" x2="20" y2="20" />
+              <line x1="44" y1="8" x2="44" y2="20" />
+              <line x1="22" y1="38" x2="42" y2="38" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="statLWD" style="font-size:1rem;margin-top:4px">31 Dec, 2024</div>
+            <div class="stat-label">Last Working Day</div>
+          </div>
+        </div>
+        <div class="stat-card purple fade-in" style="animation-delay:.2s">
+          <div class="stat-icon">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+              <circle cx="32" cy="32" r="24" />
+              <polyline points="32 18 32 32 42 38" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="stat-body">
+            <div class="stat-value" id="statTenure">2 yrs</div>
+            <div class="stat-label">Total Tenure</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── INFO + STATUS PANELS ── -->
+      <div class="panel-grid">
+
+        <!-- LEFT — Employment Details -->
+        <div class="panel fade-in" style="animation-delay:.25s">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Employment Details
+            </span>
+            <div class="panel-actions">
+              <button class="panel-btn">−</button>
+              <button class="panel-btn">✕</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="info-rows">
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>Employee Name</span>
+                <span class="info-val">Frontend, Employee</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>Designation</span>
+                <span class="info-val">Frontend Developer</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  </svg>Department</span>
+                <span class="info-val"><span class="tag purple">Frontend Developer</span></span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>Date of Joining</span>
+                <span class="info-val">15 March, 2022</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <line x1="8" y1="14" x2="16" y2="14" />
+                  </svg>Last Working Day</span>
+                <span class="info-val">31 December, 2024</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>Total Tenure</span>
+                <span class="info-val">2 years 9 months</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>Reason for Leaving</span>
+                <span class="info-val"><span class="tag amber">Resignation</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT — Letter Status + Actions -->
+        <div class="panel fade-in" style="animation-delay:.3s">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <polyline points="9 14 11 16 15 12" />
+              </svg>
+              Letter Info
+            </span>
+            <div class="panel-actions">
+              <button class="panel-btn">−</button>
+              <button class="panel-btn">✕</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="status-banner issued">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div class="status-text">
+                <h3>Relieving Letter Issued</h3>
+                <p>Your official relieving letter has been issued and is ready to view, download, print, or send.</p>
+              </div>
+            </div>
+            <div class="info-rows">
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>Letter Issue Date</span>
+                <span class="info-val">02 January, 2025</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>Issued By</span>
+                <span class="info-val">Manager, IT</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>Organisation</span>
+                <span class="info-val">ThinkinfoExpert Solutions</span>
+              </div>
+              <div class="info-row">
+                <span class="info-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                  </svg>Status</span>
+                <span class="info-val"><span class="tag green">✓ Issued</span></span>
+              </div>
+            </div>
+
+            <!-- Send history row (shown after sending) -->
+            <div class="send-history" id="sendHistory">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 2L11 13" />
+                <path d="M22 2L15 22 11 13 2 9l20-7z" />
+              </svg>
+              <span>Letter sent to <strong id="sendHistoryName">—</strong> on <strong
+                  id="sendHistoryDate">—</strong></span>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="action-row">
+              <button class="btn btn-purple" onclick="scrollToLetter()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                View Letter
+              </button>
+              <button class="btn btn-outline-cyan" onclick="window.print()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Print
+              </button>
+              <button class="btn btn-outline-green" onclick="downloadLetter()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+              </button>
+              <button class="btn btn-outline-amber" onclick="openSendModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 2L11 13" />
+                  <path d="M22 2L15 22 11 13 2 9l20-7z" />
+                </svg>
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LETTER PREVIEW ── -->
+      <div class="letter-panel fade-in" id="letterSection" style="animation-delay:.35s">
+        <div class="letter-panel-header">
+          <span class="letter-panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <polyline points="9 14 11 16 15 12" />
+            </svg>
+            Official Relieving Letter — Preview
+          </span>
+          <div class="letter-panel-actions">
+            <button class="lp-btn lp-btn-print" onclick="window.print()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print
+            </button>
+            <button class="lp-btn lp-btn-dl" onclick="downloadLetter()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Download
+            </button>
+            <button class="lp-btn lp-btn-send" onclick="openSendModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M22 2L11 13" />
+                <path d="M22 2L15 22 11 13 2 9l20-7z" />
+              </svg>
+              Send
+            </button>
+          </div>
+        </div>
+
+        <!-- THE ACTUAL LETTER -->
+        <div class="letter-wrap">
+          <div class="letter-paper" id="letterPaper">
+            <div class="letter-co-row">
+              <div class="letter-co-logo" style="width:64px;height:64px;flex-shrink:0;"><img src="data:image/png;base64,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" alt="TES Logo" style="width:64px;height:64px;object-fit:contain;border-radius:8px;" /></div>
+              <div>
+                <div class="letter-co-name" style="font-size:1.18rem;font-weight:800;">ThinkinfoExpert Solutions</div>
+                <div class="letter-co-addr">275, Kalarkadu, Thiruvagoundanoor, Suramangalam, Salem — 636005 &nbsp;|&nbsp; gokulkrish@thinkinfoexpertsolutions.com &nbsp;|&nbsp; +91 93428 77730</div>
+                <div class="letter-co-addr" style="margin-top:2px;">www.thinkinfoexpertsolutions.com</div>
+              </div>
+            </div>
+            <div class="letter-date">Date: <strong>02 January, 2025</strong></div>
+            <div class="letter-subject">RELIEVING LETTER</div>
+            <div class="letter-body">
+              <p>To Whom It May Concern,</p>
+              <p>This is to certify that <span class="hl">Frontend, Employee</span> was employed with
+                <strong>ThinkinfoExpert Solutions</strong> as a <span class="hl">Frontend Developer</span> in the <span
+                  class="hl">Frontend Developer</span> department from <strong>15 March, 2022</strong> to <strong>31
+                  December, 2024</strong> — a tenure of approximately <strong>2 years and 9 months</strong>.
+              </p>
+              <p>Frontend Employee has been officially relieved from all duties and responsibilities effective
+                <strong>31 December, 2024</strong>, following resignation.
+              </p>
+              <p>During the period of employment, Frontend Employee has discharged all assigned duties diligently and
+                with commitment. All company property, access credentials, and confidential information have been duly
+                returned and accounted for. There are no pending obligations, dues, or liabilities towards the
+                organisation.</p>
+              <p>We wish Frontend Employee all the very best in future professional endeavours and hope the experience
+                gained here proves valuable.</p>
+            </div>
+            <div class="letter-closing">
+              <p>Yours sincerely,</p>
+              <div class="letter-sig">
+                <div class="letter-sig-line"></div>
+                <div class="letter-sig-name">Manager, IT</div>
+                <div class="letter-sig-role">IT Department Manager</div>
+                <div class="letter-sig-role">ThinkinfoExpert Solutions</div>
+              </div>
+            </div>
+            <div class="letter-seal">
+              <div class="letter-seal-inner">
+                <div class="letter-seal-text">OFFICIAL<br>SEAL<br>ThinkinfoExpert<br>Solutions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="toastIcon"></svg>
+    <span id="toastMsg"></span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SEND LETTER MODAL
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="sendModal" onclick="handleOverlayClick(event)">
+    <div class="modal" style="position:relative">
+
+      <!-- Sending animation overlay -->
+      <div class="sending-overlay" id="sendingOverlay">
+        <div id="sendingSpinner" class="send-spinner"></div>
+        <div class="sending-text" id="sendingText">Sending Letter…</div>
+        <div class="sending-sub" id="sendingSub">Securely forwarding to recipient</div>
+        <!-- Success state (hidden initially) -->
+        <div class="send-success" id="sendSuccess">
+          <div class="send-success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div class="send-success-title">Letter Sent Successfully!</div>
+          <div class="send-success-sub" id="sendSuccessSub">Your relieving letter has been forwarded.</div>
+        </div>
+      </div>
+
+      <div class="modal-header">
+        <span class="modal-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 2L11 13" />
+            <path d="M22 2L15 22 11 13 2 9l20-7z" />
+          </svg>
+          Send Relieving Letter
+        </span>
+        <button class="modal-close" onclick="closeSendModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Recipient selection -->
+        <div class="recipient-label">Select Recipient</div>
+        <div class="recipient-cards">
+          <div class="recipient-card" id="rc-ceo" onclick="selectRecipient('ceo')">
+            <div class="rc-avatar ceo">G</div>
+            <div class="rc-info">
+              <div class="rc-name">S. Gokul Krish</div>
+              <div class="rc-role">Director</div>
+            </div>
+            <div class="rc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg></div>
+          </div>
+          <div class="recipient-card" id="rc-mgr" onclick="selectRecipient('mgr')">
+            <div class="rc-avatar mgr">H</div>
+            <div class="rc-info">
+              <div class="rc-name">HR Manager</div>
+              <div class="rc-role">HR Department</div>
+            </div>
+            <div class="rc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg></div>
+          </div>
+        </div>
+
+        <!-- Email to -->
+        <div class="form-group">
+          <label class="form-label">Send To (Email)</label>
+          <input type="email" class="form-input" id="sendToEmail" placeholder="recipient@thinkinfoexpertsolutions.com" readonly />
+        </div>
+
+        <!-- Subject -->
+        <div class="form-group">
+          <label class="form-label">Subject</label>
+          <input type="text" class="form-input" id="sendSubject"
+            value="Relieving Letter — Frontend Employee | ThinkinfoExpert Solutions" />
+        </div>
+
+        <!-- Message -->
+        <div class="form-group">
+          <label class="form-label">Message (Optional)</label>
+          <textarea class="form-textarea" id="sendMessage" placeholder="Add a personal note or request (optional)…">Dear Sir/Madam,
+
+Please find attached my official Relieving Letter issued by ThinkinfoExpert Solutions dated 02 January, 2025. Kindly acknowledge receipt at your earliest convenience.
+
+Thank you.</textarea>
+        </div>
+
+        <!-- Priority -->
+        <div class="recipient-label">Priority</div>
+        <div class="priority-row">
+          <div class="priority-opt active-normal" data-p="normal" onclick="selectPriority(this)">Normal</div>
+          <div class="priority-opt" data-p="urgent" onclick="selectPriority(this)">Urgent</div>
+          <div class="priority-opt" data-p="high" onclick="selectPriority(this)">High Priority</div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+          </svg>
+          Letter will be sent as PDF attachment
+        </div>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeSendModal()">Cancel</button>
+          <button class="btn-send-confirm" id="btnSendConfirm" onclick="confirmSend()" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22 11 13 2 9l20-7z" />
+            </svg>
+            Send Letter
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ── Matrix Rain ── */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Sidebar toggle ── */
+      var mt = document.getElementById('menuToggle'), sb = document.querySelector('.sidebar');
+      if (mt) {
+        mt.addEventListener('click', function () { sb.classList.toggle('open') });
+        document.addEventListener('click', function (e) {
+          if (!sb.contains(e.target) && !mt.contains(e.target)) sb.classList.remove('open')
+        })
+      }
+
+      /* ── Animate stat values ── */
+      function animateValue(el, start, end, dur, suffix) {
+        suffix = suffix || '';
+        var range = end - start, startTime = null;
+        function step(ts) {
+          if (!startTime) startTime = ts;
+          var progress = Math.min((ts - startTime) / dur, 1);
+          el.textContent = Math.floor(start + range * progress) + suffix;
+          if (progress < 1) requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+      }
+
+      /* ── Panel collapse/close ── */
+      document.querySelectorAll('.panel-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var panel = btn.closest('.panel');
+          if (btn.textContent.trim() === '−') {
+            var body = panel.querySelector('.panel-body');
+            body.style.display = body.style.display === 'none' ? '' : 'none';
+            btn.textContent = body.style.display === 'none' ? '+' : '−'
+          } else {
+            panel.style.display = 'none'
+          }
+        })
+      });
+
+      /* ── Scroll to letter ── */
+      window.scrollToLetter = function () {
+        document.getElementById('letterSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        toast('Scroll to your official letter below.', 'info')
+      };
+
+      /* ── Download ── */
+      window.downloadLetter = function () {
+        toast('Opening download dialog…', 'info');
+        setTimeout(function () { window.print() }, 600)
+      };
+
+      /* ══════════════════════════════════════
+         SEND MODAL LOGIC
+      ══════════════════════════════════════ */
+      var recipients = {
+        ceo: { name: 'S. Gokul Krish', role: 'Director', email: 'gokulkrish@thinkinfoexpertsolutions.com' },
+        mgr: { name: 'HR Manager', role: 'HR Department', email: 'hr@thinkinfoexpertsolutions.com' }
+      };
+
+      var selectedRecipient = null;
+      var selectedPriority = 'normal';
+
+      window.openSendModal = function () {
+        document.getElementById('sendModal').classList.add('open');
+        document.body.style.overflow = 'hidden'
+      };
+
+      window.closeSendModal = function () {
+        var overlay = document.getElementById('sendModal');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+        // Reset state after close
+        setTimeout(resetModal, 350)
+      };
+
+      window.handleOverlayClick = function (e) {
+        if (e.target === document.getElementById('sendModal')) closeSendModal()
+      };
+
+      window.selectRecipient = function (id) {
+        selectedRecipient = id;
+        document.querySelectorAll('.recipient-card').forEach(function (c) { c.classList.remove('selected') });
+        document.getElementById('rc-' + id).classList.add('selected');
+        var r = recipients[id];
+        document.getElementById('sendToEmail').value = r.email;
+        document.getElementById('btnSendConfirm').disabled = false
+      };
+
+      window.selectPriority = function (el) {
+        selectedPriority = el.getAttribute('data-p');
+        document.querySelectorAll('.priority-opt').forEach(function (o) {
+          o.classList.remove('active-normal', 'active-urgent', 'active-high')
+        });
+        el.classList.add('active-' + selectedPriority)
+      };
+
+      window.confirmSend = function () {
+        if (!selectedRecipient) { toast('Please select a recipient.', 'error'); return }
+        var r = recipients[selectedRecipient];
+        var overlay = document.getElementById('sendingOverlay');
+        var spinner = document.getElementById('sendingSpinner');
+        var sendingText = document.getElementById('sendingText');
+        var sendingSub = document.getElementById('sendingSub');
+        var successDiv = document.getElementById('sendSuccess');
+        var successSub = document.getElementById('sendSuccessSub');
+
+        // Show sending state
+        overlay.classList.add('show');
+        spinner.style.display = 'block';
+        successDiv.style.display = 'none';
+        sendingText.textContent = 'Sending Letter…';
+        sendingSub.textContent = 'Securely forwarding to ' + r.name;
+
+        // Simulate send
+        setTimeout(function () {
+          spinner.style.display = 'none';
+          successDiv.style.display = 'flex';
+          successSub.textContent = 'Successfully sent to ' + r.name + ' (' + r.email + ')';
+
+          // Update history row
+          var now = new Date();
+          var dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+          document.getElementById('sendHistoryName').textContent = r.name + ' (' + r.role + ')';
+          document.getElementById('sendHistoryDate').textContent = dateStr;
+          document.getElementById('sendHistory').classList.add('visible');
+
+          // Auto close after success
+          setTimeout(function () {
+            closeSendModal();
+            toast('Relieving letter sent to ' + r.name + ' successfully!', 'success')
+          }, 2200)
+        }, 2000)
+      };
+
+      function resetModal() {
+        selectedRecipient = null;
+        document.querySelectorAll('.recipient-card').forEach(function (c) { c.classList.remove('selected') });
+        document.getElementById('sendToEmail').value = '';
+        document.getElementById('btnSendConfirm').disabled = true;
+        document.getElementById('sendingOverlay').classList.remove('show');
+        document.getElementById('sendSuccess').style.display = 'none';
+        document.getElementById('sendingSpinner').style.display = 'block';
+        // Reset priority
+        document.querySelectorAll('.priority-opt').forEach(function (o) { o.classList.remove('active-normal', 'active-urgent', 'active-high') });
+        document.querySelector('[data-p="normal"]').classList.add('active-normal');
+        selectedPriority = 'normal'
+      }
+
+      /* Keyboard close */
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSendModal()
+      });
+
+      /* ── Toast ── */
+      function toast(msg, type) {
+        var icons = {
+          success: '<polyline points="20 6 9 17 4 12"/>',
+          error: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+          info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/>'
+        };
+        document.getElementById('toastIcon').innerHTML = icons[type] || icons.info;
+        document.getElementById('toastMsg').textContent = msg;
+        var t = document.getElementById('toast');
+        t.className = 'toast ' + type + ' show';
+        clearTimeout(t._t);
+        t._t = setTimeout(function () { t.classList.remove('show') }, 3500)
+      }
+
+      window._toast = toast;
+
+      /* ── Init ── */
+      setTimeout(function () {
+        animateValue(document.getElementById('statTenure'), 0, 2, 900, ' yrs')
+      }, 300);
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var count = parseInt(localStorage.getItem('notifUnread') || '3', 10);
+        var badge = document.getElementById('navBadge');
+        if (badge) { if (count > 0) { badge.textContent = count; badge.style.display = ''; } else { badge.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
