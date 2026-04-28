@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <title>Thinkinfo Expert Solutions — Intern Dashboard</title>
+    <link rel="icon" href="./Assets/logo.png" type="image/png">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg-0: #020608;
+            --bg-1: #0a0f18;
+            --cyan: #0ef;
+            --cyan-dim: rgba(14, 239, 255, .25);
+            --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+            --green: #00e676;
+            --green-dim: rgba(0, 230, 118, .2);
+            --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+            --red: #ff3a4a;
+            --red-dim: rgba(255, 58, 74, .25);
+            --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+            --amber: #ffaa00;
+            --amber-dim: rgba(255, 170, 0, .25);
+            --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+            --text: #b8d4e8;
+            --text-dim: #4e6a7d;
+            --border: rgba(14, 239, 255, .12);
+            --radius: 10px;
+            --sidebar-w: 220px
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow-x: hidden
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-0);
+            color: var(--text);
+            display: flex;
+            position: relative
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+            pointer-events: none;
+            z-index: 999
+        }
+
+        #matrixCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: .5
+        }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            flex-shrink: 0;
+            background: rgba(10, 15, 24, .85);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 20;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .sidebar-title {
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #fff
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            background: rgba(14, 239, 255, .04);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--amber), var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .92rem;
+            font-weight: 700;
+            color: #000;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px var(--amber-dim)
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0
+        }
+
+        .user-name {
+            font-size: .78rem;
+            font-weight: 600;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .user-role {
+            font-size: .68rem;
+            color: var(--text-dim);
+            margin-top: 1px
+        }
+
+        .nav {
+            padding: 8px 0
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: .82rem;
+            border-left: 3px solid transparent;
+            transition: background .2s, color .2s, border-color .2s;
+            position: relative
+        }
+
+        .nav-link svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0
+        }
+
+        .nav-link:hover {
+            background: rgba(14, 239, 255, .06);
+            color: var(--text)
+        }
+
+        .nav-link.active {
+            background: rgba(14, 239, 255, .12);
+            color: var(--cyan);
+            border-left-color: var(--cyan);
+            box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+        }
+
+        .nav-badge {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--amber);
+            color: #000;
+            font-size: .6rem;
+            font-weight: 800;
+            border-radius: 8px;
+            padding: 2px 6px;
+            animation: pulse 2s infinite
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .5
+            }
+        }
+
+        .main-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            position: relative;
+            z-index: 10
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            padding: 0 24px;
+            flex-shrink: 0;
+            background: rgba(10, 15, 24, .85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            cursor: pointer;
+            transition: background .2s, border-color .2s;
+            align-items: center;
+            justify-content: center
+        }
+
+        .menu-toggle svg {
+            width: 18px;
+            height: 18px
+        }
+
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: .5px
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .76rem
+        }
+
+        .breadcrumb-link {
+            color: var(--cyan);
+            text-decoration: none
+        }
+
+        .breadcrumb-sep,
+        .breadcrumb-current {
+            color: var(--text-dim)
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent
+        }
+
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px
+        }
+
+        .stat-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 20px;
+            background: rgba(15, 22, 32, .9);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            position: relative;
+            overflow: hidden;
+            transition: border-color .3s, box-shadow .3s, transform .2s;
+            cursor: default
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px)
+        }
+
+        .stat-card.cyan {
+            color: var(--cyan);
+            border-color: var(--cyan-dim)
+        }
+
+        .stat-card.cyan:hover {
+            border-color: var(--cyan);
+            box-shadow: var(--cyan-glow)
+        }
+
+        .stat-card.green {
+            color: var(--green);
+            border-color: var(--green-dim)
+        }
+
+        .stat-card.green:hover {
+            border-color: var(--green);
+            box-shadow: var(--green-glow)
+        }
+
+        .stat-card.amber {
+            color: var(--amber);
+            border-color: var(--amber-dim)
+        }
+
+        .stat-card.amber:hover {
+            border-color: var(--amber);
+            box-shadow: var(--amber-glow)
+        }
+
+        .stat-card.red {
+            color: var(--red);
+            border-color: var(--red-dim)
+        }
+
+        .stat-card.red:hover {
+            border-color: var(--red);
+            box-shadow: var(--red-glow)
+        }
+
+        .stat-icon {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            background: rgba(20, 28, 42, .8);
+            border: 1px solid currentColor;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 0 8px currentColor)
+        }
+
+        .stat-icon svg {
+            width: 40px;
+            height: 40px
+        }
+
+        .stat-body {
+            flex: 1
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+            text-shadow: 0 0 12px currentColor
+        }
+
+        .stat-label {
+            font-size: .78rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+            letter-spacing: .5px
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 16px
+        }
+
+        .panel {
+            background: rgba(10, 15, 24, .85);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: border-color .3s, box-shadow .3s
+        }
+
+        .panel:hover {
+            border-color: var(--cyan-dim)
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(15, 22, 32, .7);
+            border-bottom: 1px solid var(--border)
+        }
+
+        .panel-title {
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: .5px
+        }
+
+        .panel-body {
+            padding: 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 16px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            justify-content: center
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .74rem;
+            color: var(--text-dim)
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%
+        }
+
+        .footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 44px;
+            padding: 0 24px;
+            flex-shrink: 0;
+            background: rgba(10, 15, 24, .85);
+            border-top: 1px solid var(--border);
+            font-size: .7rem;
+            color: var(--text-dim)
+        }
+
+        @media(max-width:900px) {
+            :root {
+                --sidebar-w: 0
+            }
+
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 240px;
+                transform: translateX(-100%);
+                transition: transform .3s;
+                z-index: 100
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+            }
+
+            .menu-toggle {
+                display: flex
+            }
+
+            .panels {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="matrixCanvas"></canvas>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" onerror="this.style.display='none'" />
+            <span class="sidebar-title">Intern Panel</span>
+        </div>
+        <div class="user-card">
+            <div class="user-avatar">I</div>
+            <div class="user-info">
+                <div class="user-name">Intern User</div>
+                <div class="user-role">Intern</div>
+            </div>
+        </div>
+        <nav class="nav">
+            <a href="intern-home.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                </svg><span>Home</span></a>
+            <a href="intern-profile-edit.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg><span>View/Edit Profile</span></a>
+            <a href="intern-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg><span>View Attendance</span></a>
+            <a href="intern-notifications.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg><span>View Notifications</span><span class="nav-badge">3</span></a>
+            <a href="intern-apply-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M9 8h6m-6 4h6m-6 4h4" />
+                </svg><span>Apply For Leave</span></a>
+            <a href="intern-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg><span>Feedback</span></a>
+            <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg><span>Logout</span></a>
+        </nav>
+    </aside>
+    <div class="main-wrap">
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg></button>
+                <h1 class="page-title">Intern Dashboard</h1>
+            </div>
+            <div class="breadcrumb"><a href="#" class="breadcrumb-link">Home</a><span
+                    class="breadcrumb-sep">/</span><span class="breadcrumb-current">Intern Dashboard</span></div>
+        </header>
+        <main class="content">
+            <div class="stat-cards">
+                <div class="stat-card cyan">
+                    <div class="stat-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+                            <rect x="8" y="14" width="48" height="40" rx="4" />
+                            <line x1="8" y1="26" x2="56" y2="26" />
+                            <line x1="20" y1="8" x2="20" y2="20" />
+                            <line x1="44" y1="8" x2="44" y2="20" />
+                            <polyline points="22 38 28 44 42 32" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="totalAtt">22</div>
+                        <div class="stat-label">Total Attendance</div>
+                    </div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+                            <circle cx="32" cy="32" r="22" />
+                            <polyline points="22 32 29 39 44 24" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="pctPres">82%</div>
+                        <div class="stat-label">Percentage Present</div>
+                    </div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+                            <circle cx="32" cy="32" r="22" />
+                            <line x1="24" y1="24" x2="40" y2="40" stroke-linecap="round" />
+                            <line x1="40" y1="24" x2="24" y2="40" stroke-linecap="round" />
+                        </svg></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="pctAbs">14%</div>
+                        <div class="stat-label">Percentage Absent</div>
+                    </div>
+                </div>
+                <div class="stat-card amber">
+                    <div class="stat-icon"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3">
+                            <rect x="10" y="20" width="44" height="30" rx="3" />
+                            <path d="M22 20v-4a10 10 0 0 1 20 0v4" />
+                        </svg></div>
+                    <div class="stat-body">
+                        <div class="stat-value" id="daysLeft">45</div>
+                        <div class="stat-label">Days Remaining</div>
+                    </div>
+                </div>
+            </div>
+            <div class="panels">
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Attendance Overview</span></div>
+                    <div class="panel-body"><canvas id="donut" width="180" height="180"></canvas>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)">
+                                </div>Present
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:var(--red);box-shadow:0 0 6px var(--red)">
+                                </div>Absent
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-dot" style="background:var(--amber);box-shadow:0 0 6px var(--amber)">
+                                </div>Leave
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Monthly Trend</span></div>
+                    <div class="panel-body"><canvas id="bar" width="360" height="180"></canvas></div>
+                </div>
+            </div>
+        </main>
+        <footer class="footer"><span>Copyright &copy; <span id="yr"></span> <strong
+                    style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,.9)">Thinkinfo Expert Solutions.</strong> All
+                rights reserved.</span><span>Intern Panel v1.0</span></footer>
+    </div>
+    <script>
+        (function () {
+            document.getElementById('yr').textContent = new Date().getFullYear();
+            // Matrix
+            var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops, CH = 'アイウエオ01234ABCDEF';
+            function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = Array(cols).fill(1); }
+            resize(); addEventListener('resize', resize);
+            (function loop() { ctx.fillStyle = 'rgba(2,6,8,.06)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px Courier New'; for (var i = 0; i < drops.length; i++) { ctx.fillStyle = 'rgba(14,239,255,.6)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], i * 18, drops[i] * 18); if (drops[i] * 18 > H && Math.random() > .975) drops[i] = 0; drops[i]++; } requestAnimationFrame(loop); })();
+            // Sidebar
+            var tog = document.getElementById('menuToggle'), sb = document.getElementById('sidebar');
+            tog && tog.addEventListener('click', function (e) { e.stopPropagation(); sb.classList.toggle('open'); });
+            document.addEventListener('click', function (e) { if (sb && sb.classList.contains('open') && !sb.contains(e.target) && e.target !== tog) sb.classList.remove('open'); });
+            // Donut
+            (function () { var c = document.getElementById('donut'), ctx = c.getContext('2d'); var data = [{ v: 18, col: '#00e676' }, { v: 3, col: '#ff3a4a' }, { v: 1, col: '#ffaa00' }]; var sum = 22, s = -Math.PI / 2; data.forEach(function (d) { var a = (d.v / sum) * Math.PI * 2; ctx.beginPath(); ctx.arc(90, 90, 75, s, s + a); ctx.arc(90, 90, 45, s + a, s, true); ctx.closePath(); ctx.fillStyle = d.col; ctx.shadowBlur = 10; ctx.shadowColor = d.col; ctx.fill(); s += a; }); })();
+            // Bar
+            (function () { var c = document.getElementById('bar'), ctx = c.getContext('2d'); var months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'], vals = [20, 22, 19, 21, 18, 22], W = c.width, H = c.height, pad = 30, bw = 36, gap = 18, max = 24; months.forEach(function (m, i) { var x = pad + i * (bw + gap), h = ((vals[i] / max) * (H - pad * 2)), y = H - pad - h; var gr = ctx.createLinearGradient(x, y, x, H - pad); gr.addColorStop(0, 'rgba(14,239,255,.85)'); gr.addColorStop(1, 'rgba(14,239,255,.15)'); ctx.fillStyle = gr; ctx.shadowBlur = 8; ctx.shadowColor = 'rgba(14,239,255,.4)'; ctx.fillRect(x, y, bw, h); ctx.fillStyle = 'rgba(184,212,232,.7)'; ctx.font = '11px Segoe UI'; ctx.shadowBlur = 0; ctx.textAlign = 'center'; ctx.fillText(m, x + bw / 2, H - 8); }); })();
+        })();
+    </script>
+</body>
+
+</html>
