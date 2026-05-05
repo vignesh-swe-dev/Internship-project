@@ -1,0 +1,2431 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Thinkinfo Expert Solutions — Add New Employee</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #b47fff;
+      --purple-dim: rgba(180, 127, 255, .25);
+      --purple-glow: 0 0 12px rgba(180, 127, 255, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow-x: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 1000
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    /* TOAST */
+    .toast-wrap {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: .82rem;
+      font-weight: 600;
+      backdrop-filter: blur(12px);
+      border: 1px solid;
+      min-width: 260px;
+      animation: slideIn .25s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .4)
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0
+    }
+
+    .toast.success {
+      background: rgba(0, 230, 118, .1);
+      border-color: var(--green-dim);
+      color: var(--green)
+    }
+
+    .toast.error {
+      background: rgba(255, 58, 74, .1);
+      border-color: var(--red-dim);
+      color: var(--red)
+    }
+
+    .toast.warning {
+      background: rgba(255, 170, 0, .1);
+      border-color: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .toast.info {
+      background: rgba(14, 239, 255, .1);
+      border-color: var(--cyan-dim);
+      color: var(--cyan)
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    .toast.fade-out {
+      animation: fadeOut .3s ease forwards
+    }
+
+    @keyframes fadeOut {
+      to {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--amber), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--amber-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: pulse 2s infinite
+    }
+
+    /* MAIN */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08)
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px
+    }
+
+    .live-clock {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: .78rem;
+      color: var(--text-dim)
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 1.5s infinite
+    }
+
+    .live-clock-time {
+      color: var(--cyan);
+      font-weight: 700;
+      font-size: .88rem;
+      text-shadow: 0 0 8px var(--cyan-dim)
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .header-bell {
+      position: relative;
+      width: 34px;
+      height: 34px;
+      background: rgba(255, 170, 0, .08);
+      border: 1px solid var(--amber-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s
+    }
+
+    .header-bell:hover {
+      background: rgba(255, 170, 0, .16);
+      box-shadow: var(--amber-glow)
+    }
+
+    .header-bell svg {
+      width: 17px;
+      height: 17px;
+      color: var(--amber)
+    }
+
+    .header-bell-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      background: var(--red);
+      border-radius: 50%;
+      font-size: .6rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--bg-0);
+      animation: pulse 1.5s infinite
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* PAGE BANNER */
+    .page-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      background: rgba(10, 15, 24, .85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .page-banner::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--cyan), var(--green));
+      border-radius: 2px 0 0 2px
+    }
+
+    .page-banner-left {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
+
+    .page-banner-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(14, 239, 255, .08);
+      border: 1px solid var(--cyan-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      filter: drop-shadow(0 0 6px var(--cyan))
+    }
+
+    .page-banner-icon svg {
+      width: 24px;
+      height: 24px
+    }
+
+    .page-banner-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .3px
+    }
+
+    .page-banner-sub {
+      font-size: .74rem;
+      color: var(--text-dim);
+      margin-top: 3px
+    }
+
+    .page-banner-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    /* STEPS */
+    .steps-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 24px;
+      background: rgba(10, 15, 24, .85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 22px;
+      overflow-x: auto;
+      scrollbar-width: none
+    }
+
+    .steps-bar::-webkit-scrollbar {
+      display: none
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: opacity .2s
+    }
+
+    .step-item:not(.active):not(.done) {
+      opacity: .45
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 800;
+      border: 2px solid;
+      transition: background .3s, border-color .3s, box-shadow .3s;
+      flex-shrink: 0
+    }
+
+    .step-item.active .step-num {
+      background: rgba(14, 239, 255, .15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(14, 239, 255, .4)
+    }
+
+    .step-item.done .step-num {
+      background: rgba(0, 230, 118, .15);
+      border-color: var(--green);
+      color: var(--green)
+    }
+
+    .step-item:not(.active):not(.done) .step-num {
+      border-color: rgba(14, 239, 255, .2);
+      color: var(--text-dim)
+    }
+
+    .step-label {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff
+    }
+
+    .step-sub {
+      font-size: .64rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .step-item.active .step-label {
+      color: var(--cyan)
+    }
+
+    .step-item.done .step-label {
+      color: var(--green)
+    }
+
+    .step-connector {
+      flex: 1;
+      min-width: 30px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(14, 239, 255, .15), rgba(14, 239, 255, .05));
+      margin: 0 12px
+    }
+
+    /* FORM SECTIONS */
+    .form-section {
+      background: rgba(10, 15, 24, .88);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      transition: border-color .3s
+    }
+
+    .form-section:focus-within {
+      border-color: rgba(14, 239, 255, .25)
+    }
+
+    .form-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(15, 22, 32, .7);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none
+    }
+
+    .form-section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .86rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .3px
+    }
+
+    .form-section-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--cyan)
+    }
+
+    .section-toggle {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: .9rem;
+      transition: background .2s, color .2s;
+      font-weight: 700
+    }
+
+    .section-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan)
+    }
+
+    .form-section-body {
+      padding: 20px;
+      transition: max-height .3s ease, padding .3s ease;
+      overflow: hidden
+    }
+
+    .form-section-body.collapsed {
+      max-height: 0 !important;
+      padding-top: 0;
+      padding-bottom: 0
+    }
+
+    /* FORM GRID */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px
+    }
+
+    .form-grid.cols-3 {
+      grid-template-columns: 1fr 1fr 1fr
+    }
+
+    .form-grid.cols-1 {
+      grid-template-columns: 1fr
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1
+    }
+
+    .form-label {
+      font-size: .74rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .2px;
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .form-label .req {
+      color: var(--red);
+      font-size: .8rem
+    }
+
+    .form-label .opt {
+      color: var(--text-dim);
+      font-size: .68rem;
+      font-weight: 400
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: rgba(15, 22, 32, .8);
+      border: 1px solid rgba(14, 239, 255, .1);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      width: 100%
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .08);
+      background: rgba(15, 22, 32, .95)
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-dim)
+    }
+
+    .form-input.error,
+    .form-select.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(255, 58, 74, .08)
+    }
+
+    .form-select {
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234e6a7d' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px
+    }
+
+    .form-select option {
+      background: #0a0f18;
+      color: var(--text)
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.5
+    }
+
+    .form-hint {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 2px
+    }
+
+    .form-error-msg {
+      font-size: .68rem;
+      color: var(--red);
+      margin-top: 2px;
+      display: none
+    }
+
+    .form-error-msg.visible {
+      display: block
+    }
+
+    /* AVATAR UPLOAD */
+    .avatar-upload-wrap {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 16px;
+      background: rgba(15, 22, 32, .6);
+      border: 1px solid var(--border);
+      border-radius: 10px
+    }
+
+    .avatar-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 14px var(--cyan-dim);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer
+    }
+
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0
+    }
+
+    .avatar-upload-info {
+      flex: 1
+    }
+
+    .avatar-upload-title {
+      font-size: .84rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px
+    }
+
+    .avatar-upload-sub {
+      font-size: .72rem;
+      color: var(--text-dim);
+      line-height: 1.5
+    }
+
+    .btn-upload-photo {
+      padding: 8px 16px;
+      background: rgba(14, 239, 255, .07);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 7px;
+      font-size: .76rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .2s, box-shadow .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px
+    }
+
+    .btn-upload-photo:hover {
+      background: rgba(14, 239, 255, .14);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-upload-photo svg {
+      width: 13px;
+      height: 13px
+    }
+
+    /* INPUT WRAPPERS */
+    .input-wrap {
+      position: relative
+    }
+
+    .input-wrap .input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      pointer-events: none
+    }
+
+    .input-wrap .input-icon svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .input-wrap .form-input {
+      padding-left: 36px
+    }
+
+    .input-copy-wrap {
+      position: relative
+    }
+
+    .input-copy-wrap .form-input {
+      padding-right: 40px
+    }
+
+    .btn-copy-input {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      background: rgba(14, 239, 255, .08);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, color .2s
+    }
+
+    .btn-copy-input:hover {
+      background: rgba(14, 239, 255, .15);
+      color: var(--cyan)
+    }
+
+    .btn-copy-input svg {
+      width: 12px;
+      height: 12px
+    }
+
+    .id-gen-wrap {
+      display: flex;
+      gap: 8px
+    }
+
+    .id-gen-wrap .form-input {
+      flex: 1
+    }
+
+    .btn-gen-id {
+      padding: 10px 14px;
+      background: rgba(14, 239, 255, .07);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 8px;
+      font-size: .76rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, box-shadow .2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0
+    }
+
+    .btn-gen-id:hover {
+      background: rgba(14, 239, 255, .14);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-gen-id svg {
+      width: 13px;
+      height: 13px
+    }
+
+    /* PASSWORD */
+    .pw-strength-bar {
+      display: flex;
+      gap: 3px;
+      margin-top: 6px
+    }
+
+    .pw-seg {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, .07);
+      transition: background .3s
+    }
+
+    .pw-seg.weak {
+      background: var(--red)
+    }
+
+    .pw-seg.fair {
+      background: var(--amber)
+    }
+
+    .pw-seg.good {
+      background: var(--cyan)
+    }
+
+    .pw-seg.strong {
+      background: var(--green)
+    }
+
+    .pw-strength-label {
+      font-size: .68rem;
+      margin-top: 4px
+    }
+
+    .pw-wrap {
+      position: relative
+    }
+
+    .pw-wrap .form-input {
+      padding-right: 40px
+    }
+
+    .pw-eye {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26px;
+      height: 26px;
+      border: none;
+      background: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color .2s
+    }
+
+    .pw-eye:hover {
+      color: var(--cyan)
+    }
+
+    .pw-eye svg {
+      width: 15px;
+      height: 15px
+    }
+
+    /* RADIO / CHECKBOX */
+    .radio-group,
+    .check-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .radio-item,
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(15, 22, 32, .8);
+      border: 1px solid rgba(14, 239, 255, .1);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .78rem;
+      color: var(--text-dim);
+      transition: background .2s, border-color .2s, color .2s
+    }
+
+    .radio-item:hover,
+    .check-item:hover {
+      background: rgba(14, 239, 255, .07);
+      border-color: var(--cyan-dim);
+      color: var(--text)
+    }
+
+    .radio-item input,
+    .check-item input {
+      display: none
+    }
+
+    .radio-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(14, 239, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color .2s
+    }
+
+    .radio-dot::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      display: none
+    }
+
+    .radio-item.selected {
+      background: rgba(14, 239, 255, .1);
+      border-color: var(--cyan);
+      color: var(--cyan)
+    }
+
+    .radio-item.selected .radio-dot {
+      border-color: var(--cyan)
+    }
+
+    .radio-item.selected .radio-dot::after {
+      display: block
+    }
+
+    .check-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 2px solid rgba(14, 239, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background .2s, border-color .2s
+    }
+
+    .check-box svg {
+      width: 9px;
+      height: 9px;
+      display: none
+    }
+
+    .check-item.checked {
+      background: rgba(14, 239, 255, .1);
+      border-color: var(--cyan);
+      color: var(--cyan)
+    }
+
+    .check-item.checked .check-box {
+      background: var(--cyan);
+      border-color: var(--cyan)
+    }
+
+    .check-item.checked .check-box svg {
+      display: block
+    }
+
+    .form-divider {
+      grid-column: 1 / -1;
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0
+    }
+
+    /* PERMISSIONS TABLE */
+    .perm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .78rem
+    }
+
+    .perm-table thead th {
+      padding: 8px 12px;
+      text-align: left;
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border-bottom: 1px solid var(--cyan-dim);
+      background: rgba(14, 239, 255, .04)
+    }
+
+    .perm-table tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(14, 239, 255, .04);
+      color: var(--text)
+    }
+
+    .perm-table tbody tr:hover {
+      background: rgba(14, 239, 255, .03)
+    }
+
+    .perm-table .module-name {
+      font-weight: 600;
+      color: #fff
+    }
+
+    .perm-toggle {
+      position: relative;
+      width: 36px;
+      height: 18px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, .1);
+      cursor: pointer;
+      transition: background .2s;
+      flex-shrink: 0;
+      display: inline-block
+    }
+
+    .perm-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s, background .2s;
+      opacity: .5
+    }
+
+    .perm-toggle.on {
+      background: rgba(0, 230, 118, .35)
+    }
+
+    .perm-toggle.on::after {
+      transform: translateX(18px);
+      opacity: 1;
+      background: var(--green)
+    }
+
+    .perm-table td:not(:first-child) {
+      text-align: center
+    }
+
+    /* ACTION BAR */
+    .form-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      background: rgba(10, 15, 24, .9);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      gap: 12px;
+      position: sticky;
+      bottom: 0;
+      z-index: 30;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, .4)
+    }
+
+    .form-action-left {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .form-action-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 9px;
+      font-size: .82rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid;
+      transition: background .2s, box-shadow .2s, transform .15s;
+      letter-spacing: .3px
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .btn-primary {
+      background: rgba(0, 230, 118, .12);
+      color: var(--green);
+      border-color: var(--green-dim)
+    }
+
+    .btn-primary:hover {
+      background: rgba(0, 230, 118, .22);
+      box-shadow: var(--green-glow)
+    }
+
+    .btn-secondary {
+      background: rgba(14, 239, 255, .07);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .btn-secondary:hover {
+      background: rgba(14, 239, 255, .14);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, .03);
+      color: var(--text-dim);
+      border-color: rgba(255, 255, 255, .08)
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, .07);
+      color: var(--text)
+    }
+
+    .btn-loading {
+      opacity: .7;
+      pointer-events: none
+    }
+
+    .btn-loading .btn-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .6s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* PROFILE PREVIEW */
+    .profile-preview {
+      background: rgba(10, 15, 24, .88);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden
+    }
+
+    .profile-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(14, 239, 255, .03) 0%, transparent 60%);
+      pointer-events: none
+    }
+
+    .pp-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 14px var(--cyan-dim)
+    }
+
+    .pp-details {
+      flex: 1
+    }
+
+    .pp-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 3px
+    }
+
+    .pp-meta {
+      font-size: .74rem;
+      color: var(--text-dim);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap
+    }
+
+    .pp-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .pp-meta svg {
+      width: 11px;
+      height: 11px
+    }
+
+    .pp-id-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+      font-size: .72rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap
+    }
+
+    /* FOOTER */
+    .footer {
+      padding: 12px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: .72rem;
+      color: var(--text-dim);
+      background: rgba(10, 15, 24, .85);
+      flex-shrink: 0
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .form-grid.cols-3 {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    @media(max-width:580px) {
+      .form-grid.cols-3 {
+        grid-template-columns: 1fr
+      }
+
+      .page-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px
+      }
+
+      .form-action-bar {
+        flex-direction: column;
+        align-items: stretch
+      }
+
+      .form-action-left,
+      .form-action-right {
+        justify-content: center
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" style="display:block;" />
+      <span class="sidebar-title">Manager Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">P</div>
+      <div class="user-info">
+        <div class="user-name">Priya Sharma</div>
+        <div class="user-role">IT Manager</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="manager-home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg><span>Home</span></a>
+      <a href="manager-profile-edit.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg><span>View/Edit Profile</span></a>
+      <a href="manager-add-salary.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg><span>Add Salary</span></a>
+      <a href="manager-edit-salary.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg><span>Edit Salary</span></a>
+      <a href="manager-take-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg><span>Take Attendance</span></a>
+      <a href="manager-view-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg><span>View/Update Attendance</span></a>
+      <a href="attendance-approval.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>Attendance Approvals</span><span class="nav-badge" id="navBadge">3</span></a>
+      <a href="manager-notifications.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>View Notifications</span><span class="nav-badge" id="navNotifBadge">3</span></a>
+      <a href="manager-apply-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg><span>Apply For Leave</span></a>
+      <a href="manager-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg><span>Add Offer Letter</span></a>
+      <a href="manager-experience-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+        </svg><span>Add Experience Letter</span></a>
+      <a href="manager-intern-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="12" y1="17" x2="8" y2="17" />
+        </svg><span>Intern Offer Letter</span></a>
+      <a href="manager-intern-certificate.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="6" />
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+        </svg><span>Intern Certificate</span></a>
+      <a href="manager-add-employee.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg><span>Add New Employee</span></a>
+      <a href="manager-add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manager-manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="manager-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg><span>Feedback</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg></button>
+        <h1 class="page-title">Add New Employee</h1>
+      </div>
+      <div class="header-right">
+        <div class="live-clock"><span class="live-dot"></span><span class="live-clock-time"
+            id="liveClock">--:--:--</span></div>
+        <div class="header-bell" onclick="window.location='attendance-approval.html'" title="Attendance Approvals">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span class="header-bell-badge" id="headerBellBadge">3</span>
+        </div>
+        <nav class="breadcrumb">
+          <a href="manager-home.html" class="breadcrumb-link">Home</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">Add Employee</span>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content" id="mainContent">
+
+      <!-- PAGE BANNER -->
+      <div class="page-banner">
+        <div class="page-banner-left">
+          <div class="page-banner-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg></div>
+          <div>
+            <div class="page-banner-title">Register New Employee</div>
+            <div class="page-banner-sub">Fill in all required details to create an employee account and assign system
+              access</div>
+          </div>
+        </div>
+        <div class="page-banner-right">
+          <a href="manager-home.html" class="btn btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>Back to Home</a>
+        </div>
+      </div>
+
+      <!-- PROFILE PREVIEW -->
+      <div class="profile-preview" id="profilePreview">
+        <div class="pp-avatar" id="ppAvatar">?</div>
+        <div class="pp-details">
+          <div class="pp-name" id="ppName">New Employee</div>
+          <div class="pp-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg><span id="ppDept">Department</span></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg><span id="ppRole">Role / Position</span></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg><span id="ppEmail">email@company.com</span></span>
+          </div>
+        </div>
+        <div class="pp-id-badge" id="ppId">ID: —</div>
+      </div>
+
+      <!-- STEPS INDICATOR -->
+      <div class="steps-bar">
+        <div class="step-item active" data-step="1" onclick="goToStep(1)">
+          <div class="step-num">1</div>
+          <div>
+            <div class="step-label">Personal Info</div>
+            <div class="step-sub">Basic details</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="2" onclick="goToStep(2)">
+          <div class="step-num">2</div>
+          <div>
+            <div class="step-label">Work Details</div>
+            <div class="step-sub">Role & Department</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="3" onclick="goToStep(3)">
+          <div class="step-num">3</div>
+          <div>
+            <div class="step-label">Account Access</div>
+            <div class="step-sub">Login & Permissions</div>
+          </div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" data-step="4" onclick="goToStep(4)">
+          <div class="step-num">4</div>
+          <div>
+            <div class="step-label">Documents</div>
+            <div class="step-sub">ID & Uploads</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: PERSONAL INFORMATION -->
+      <div class="form-section" id="sec1">
+        <div class="form-section-header" onclick="toggleSection('sec1Body', this)">
+          <div class="form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>Personal Information</div>
+          <button class="section-toggle">−</button>
+        </div>
+        <div class="form-section-body" id="sec1Body">
+          <!-- Avatar Upload -->
+          <div class="avatar-upload-wrap" style="margin-bottom:18px">
+            <div class="avatar-preview" id="avatarPreview" onclick="document.getElementById('avatarInput').click()">
+              <span id="avatarInitials">?</span>
+            </div>
+            <div class="avatar-upload-info">
+              <div class="avatar-upload-title">Profile Photo</div>
+              <div class="avatar-upload-sub">Upload a clear photo of the employee.<br>JPG, PNG, or WEBP · Max 2MB ·
+                Recommended: 400×400px</div>
+              <button class="btn-upload-photo" onclick="document.getElementById('avatarInput').click()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>Upload Photo
+              </button>
+              <input type="file" id="avatarInput" accept="image/*" style="display:none"
+                onchange="handleAvatarUpload(this)">
+            </div>
+          </div>
+          <div class="form-grid cols-3">
+            <div class="form-group"><label class="form-label">First Name <span class="req">*</span></label><input
+                type="text" class="form-input" id="firstName" placeholder="e.g. Rahul" oninput="updatePreview()"><span
+                class="form-error-msg" id="err-firstName">First name is required</span></div>
+            <div class="form-group"><label class="form-label">Middle Name <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="middleName"
+                placeholder="e.g. Kumar"></div>
+            <div class="form-group"><label class="form-label">Last Name <span class="req">*</span></label><input
+                type="text" class="form-input" id="lastName" placeholder="e.g. Mehta" oninput="updatePreview()"><span
+                class="form-error-msg" id="err-lastName">Last name is required</span></div>
+            <div class="form-group"><label class="form-label">Date of Birth <span class="req">*</span></label><input
+                type="date" class="form-input" id="dob"><span class="form-error-msg" id="err-dob">Date of birth is
+                required</span></div>
+            <div class="form-group"><label class="form-label">Gender <span class="req">*</span></label><select
+                class="form-select" id="gender">
+                <option value="">— Select Gender —</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Non-binary</option>
+                <option>Prefer not to say</option>
+              </select><span class="form-error-msg" id="err-gender">Please select a gender</span></div>
+            <div class="form-group"><label class="form-label">Blood Group <span
+                  class="opt">(optional)</span></label><select class="form-select" id="bloodGroup">
+                <option value="">— Select —</option>
+                <option>A+</option>
+                <option>A−</option>
+                <option>B+</option>
+                <option>B−</option>
+                <option>AB+</option>
+                <option>AB−</option>
+                <option>O+</option>
+                <option>O−</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Personal Email <span class="req">*</span></label>
+              <div class="input-wrap"><span class="input-icon"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                  </svg></span><input type="email" class="form-input" id="personalEmail" placeholder="rahul@gmail.com"
+                  oninput="updatePreview()"></div><span class="form-error-msg" id="err-personalEmail">Valid email is
+                required</span>
+            </div>
+            <div class="form-group"><label class="form-label">Phone Number <span class="req">*</span></label>
+              <div class="input-wrap"><span class="input-icon"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.09a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg></span><input type="tel" class="form-input" id="phone" placeholder="+91 98765 43210"></div><span
+                class="form-error-msg" id="err-phone">Phone number is required</span>
+            </div>
+            <div class="form-group"><label class="form-label">Alternate Phone <span
+                  class="opt">(optional)</span></label>
+              <div class="input-wrap"><span class="input-icon"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12.09a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg></span><input type="tel" class="form-input" id="altPhone" placeholder="+91 98765 00000"></div>
+            </div>
+            <div class="form-group full"><label class="form-label">Residential Address <span
+                  class="req">*</span></label><textarea class="form-textarea" id="address"
+                placeholder="House No., Street, Area, City, State, PIN"></textarea><span class="form-error-msg"
+                id="err-address">Address is required</span></div>
+            <div class="form-group"><label class="form-label">City</label><input type="text" class="form-input"
+                id="city" placeholder="e.g. Bangalore"></div>
+            <div class="form-group"><label class="form-label">State</label><select class="form-select" id="state">
+                <option value="">— Select State —</option>
+                <option>Andhra Pradesh</option>
+                <option>Delhi</option>
+                <option>Gujarat</option>
+                <option>Karnataka</option>
+                <option>Kerala</option>
+                <option>Maharashtra</option>
+                <option>Rajasthan</option>
+                <option>Tamil Nadu</option>
+                <option>Telangana</option>
+                <option>Uttar Pradesh</option>
+                <option>West Bengal</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">PIN Code</label><input type="text" class="form-input"
+                id="pin" placeholder="e.g. 560001" maxlength="6"></div>
+            <div class="form-group"><label class="form-label">Emergency Contact Name <span
+                  class="req">*</span></label><input type="text" class="form-input" id="ecName" placeholder="Full name">
+            </div>
+            <div class="form-group"><label class="form-label">Relationship</label><select class="form-select"
+                id="ecRelation">
+                <option value="">— Select —</option>
+                <option>Parent</option>
+                <option>Spouse</option>
+                <option>Sibling</option>
+                <option>Child</option>
+                <option>Friend</option>
+                <option>Other</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Emergency Contact Phone <span
+                  class="req">*</span></label><input type="tel" class="form-input" id="ecPhone"
+                placeholder="+91 98765 43210"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: WORK DETAILS -->
+      <div class="form-section" id="sec2">
+        <div class="form-section-header" onclick="toggleSection('sec2Body', this)">
+          <div class="form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" />
+              <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+            </svg>Work Details</div>
+          <button class="section-toggle">−</button>
+        </div>
+        <div class="form-section-body" id="sec2Body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Employee ID <span class="req">*</span></label>
+              <div class="id-gen-wrap"><input type="text" class="form-input" id="empId" placeholder="e.g. EMP0042"
+                  oninput="updatePreview()"><button class="btn-gen-id" onclick="generateId()"><svg viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10" />
+                    <polyline points="1 20 1 14 7 14" />
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>Auto Generate</button></div><span class="form-hint">Must be unique across the system</span><span
+                class="form-error-msg" id="err-empId">Employee ID is required</span>
+            </div>
+            <div class="form-group"><label class="form-label">Work Email <span class="req">*</span></label>
+              <div class="input-copy-wrap"><input type="email" class="form-input" id="workEmail"
+                  placeholder="rahul.mehta@thinkinfo.com" oninput="updatePreview()"><button class="btn-copy-input"
+                  onclick="copyToClipboard('workEmail')" title="Copy"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg></button></div><span class="form-error-msg" id="err-workEmail">Work email is required</span>
+            </div>
+            <div class="form-group"><label class="form-label">Department <span class="req">*</span></label><select
+                class="form-select" id="department" onchange="updatePreview()">
+                <option value="">— Select Department —</option>
+                <option>IT · Development</option>
+                <option>IT · QA &amp; Testing</option>
+                <option>IT · DevOps</option>
+                <option>Human Resources</option>
+                <option>Finance &amp; Accounts</option>
+                <option>Sales &amp; Marketing</option>
+                <option>Operations</option>
+                <option>Legal &amp; Compliance</option>
+                <option>Admin &amp; Facilities</option>
+              </select><span class="form-error-msg" id="err-department">Department is required</span></div>
+            <div class="form-group"><label class="form-label">Designation / Role <span
+                  class="req">*</span></label><input type="text" class="form-input" id="designation"
+                placeholder="e.g. Senior Software Engineer" oninput="updatePreview()"><span class="form-error-msg"
+                id="err-designation">Designation is required</span></div>
+            <div class="form-group"><label class="form-label">Reporting Manager</label><select class="form-select"
+                id="reportingManager">
+                <option value="">— Select Manager —</option>
+                <option>Priya Sharma (IT Manager)</option>
+                <option>Arjun Nair (Project Lead)</option>
+                <option>Deepa Krishnan (HR Head)</option>
+                <option>Vikram Singh (CTO)</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Work Location</label><select class="form-select"
+                id="workLocation">
+                <option value="">— Select Location —</option>
+                <option>Head Office — Bangalore</option>
+                <option>Branch Office — Mumbai</option>
+                <option>Branch Office — Delhi</option>
+                <option>Remote</option>
+                <option>Hybrid</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">Employment Type <span class="req">*</span></label>
+              <div class="radio-group" id="empType">
+                <div class="radio-item selected" data-val="Full-Time" onclick="selectRadio('empType', this)">
+                  <div class="radio-dot"></div>Full-Time
+                </div>
+                <div class="radio-item" data-val="Part-Time" onclick="selectRadio('empType', this)">
+                  <div class="radio-dot"></div>Part-Time
+                </div>
+                <div class="radio-item" data-val="Contract" onclick="selectRadio('empType', this)">
+                  <div class="radio-dot"></div>Contract
+                </div>
+                <div class="radio-item" data-val="Intern" onclick="selectRadio('empType', this)">
+                  <div class="radio-dot"></div>Intern
+                </div>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">Employment Status</label>
+              <div class="radio-group" id="empStatus">
+                <div class="radio-item selected" data-val="Active" onclick="selectRadio('empStatus', this)">
+                  <div class="radio-dot"></div>Active
+                </div>
+                <div class="radio-item" data-val="Probation" onclick="selectRadio('empStatus', this)">
+                  <div class="radio-dot"></div>Probation
+                </div>
+                <div class="radio-item" data-val="On Hold" onclick="selectRadio('empStatus', this)">
+                  <div class="radio-dot"></div>On Hold
+                </div>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">Date of Joining <span class="req">*</span></label><input
+                type="date" class="form-input" id="doj"><span class="form-error-msg" id="err-doj">Date of joining is
+                required</span></div>
+            <div class="form-group"><label class="form-label">Probation End Date <span class="opt">(if
+                  applicable)</span></label><input type="date" class="form-input" id="probationEnd"></div>
+            <div class="form-group"><label class="form-label">Basic Salary (₹ / month)</label>
+              <div class="input-wrap"><span class="input-icon"
+                  style="font-size:.8rem;font-weight:700;color:var(--amber)">₹</span><input type="number"
+                  class="form-input" id="salary" placeholder="e.g. 60000" min="0"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Shift Timing</label><select class="form-select"
+                id="shift">
+                <option value="">— Select Shift —</option>
+                <option>Morning (9 AM – 6 PM)</option>
+                <option>Afternoon (1 PM – 10 PM)</option>
+                <option>Night (10 PM – 7 AM)</option>
+                <option>Flexible</option>
+              </select></div>
+            <div class="form-group full"><label class="form-label">Job Description / Notes <span
+                  class="opt">(optional)</span></label><textarea class="form-textarea" id="jobDesc"
+                placeholder="Brief description of responsibilities, key tasks, or onboarding notes..."></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: ACCOUNT ACCESS -->
+      <div class="form-section" id="sec3">
+        <div class="form-section-header" onclick="toggleSection('sec3Body', this)">
+          <div class="form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>Account Access &amp; Permissions</div>
+          <button class="section-toggle">−</button>
+        </div>
+        <div class="form-section-body" id="sec3Body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Username / Login ID <span class="req">*</span></label>
+              <div class="input-wrap"><span class="input-icon"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg></span><input type="text" class="form-input" id="username" placeholder="e.g. rahul.mehta"
+                  autocomplete="off"></div><span class="form-hint">Used to log in to the portal</span><span
+                class="form-error-msg" id="err-username">Username is required</span>
+            </div>
+            <div class="form-group"><label class="form-label">System Role <span class="req">*</span></label><select
+                class="form-select" id="sysRole">
+                <option value="">— Select Role —</option>
+                <option>Employee</option>
+                <option>Manager</option>
+                <option>HR Admin</option>
+                <option>Finance Admin</option>
+                <option>Super Admin</option>
+              </select><span class="form-error-msg" id="err-sysRole">System role is required</span></div>
+            <div class="form-group"><label class="form-label">Temporary Password <span class="req">*</span></label>
+              <div class="pw-wrap"><input type="password" class="form-input" id="password"
+                  placeholder="Min 8 chars, one uppercase, one number" oninput="checkStrength(this.value)"><button
+                  class="pw-eye" type="button" onclick="togglePw('password', this)"><svg viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg></button></div>
+              <div class="pw-strength-bar">
+                <div class="pw-seg" id="ps1"></div>
+                <div class="pw-seg" id="ps2"></div>
+                <div class="pw-seg" id="ps3"></div>
+                <div class="pw-seg" id="ps4"></div>
+              </div>
+              <div class="pw-strength-label" id="pwLabel" style="color:var(--text-dim)">Enter password</div><span
+                class="form-error-msg" id="err-password">Password is required</span>
+            </div>
+            <div class="form-group"><label class="form-label">Confirm Password <span class="req">*</span></label>
+              <div class="pw-wrap"><input type="password" class="form-input" id="confirmPw"
+                  placeholder="Re-enter password"><button class="pw-eye" type="button"
+                  onclick="togglePw('confirmPw', this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg></button></div><span class="form-error-msg" id="err-confirmPw">Passwords do not match</span>
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <div class="form-label" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" style="width:15px;height:15px;color:var(--cyan)">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>Module Access Permissions</div>
+            <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+              <table class="perm-table">
+                <thead>
+                  <tr>
+                    <th>Module</th>
+                    <th>View</th>
+                    <th>Create</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                    <th>Approve</th>
+                  </tr>
+                </thead>
+                <tbody id="permBody"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-secondary" style="padding:7px 14px;font-size:.74rem"
+                onclick="setAllPerms(true)">Enable All</button>
+              <button class="btn btn-ghost" style="padding:7px 14px;font-size:.74rem"
+                onclick="setAllPerms(false)">Disable All</button>
+            </div>
+          </div>
+          <div style="margin-top:18px">
+            <div class="form-label" style="margin-bottom:10px">Notification Preferences</div>
+            <div class="check-group" id="notifPrefs">
+              <div class="check-item checked" onclick="toggleCheck(this)">
+                <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg></div>Email Notifications
+              </div>
+              <div class="check-item checked" onclick="toggleCheck(this)">
+                <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg></div>In-App Notifications
+              </div>
+              <div class="check-item" onclick="toggleCheck(this)">
+                <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg></div>SMS Alerts
+              </div>
+              <div class="check-item" onclick="toggleCheck(this)">
+                <div class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg></div>WhatsApp Messages
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: DOCUMENTS -->
+      <div class="form-section" id="sec4">
+        <div class="form-section-header" onclick="toggleSection('sec4Body', this)">
+          <div class="form-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>Government IDs &amp; Documents</div>
+          <button class="section-toggle">−</button>
+        </div>
+        <div class="form-section-body" id="sec4Body">
+          <div class="form-grid">
+            <div class="form-group"><label class="form-label">Aadhaar Number <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="aadhaar"
+                placeholder="XXXX XXXX XXXX" maxlength="14"></div>
+            <div class="form-group"><label class="form-label">PAN Card Number <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="pan"
+                placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase"></div>
+            <div class="form-group"><label class="form-label">Passport Number <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="passport"
+                placeholder="A1234567"></div>
+            <div class="form-group"><label class="form-label">UAN (PF) Number <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="uan"
+                placeholder="100XXXXXXXXX"></div>
+            <div class="form-group"><label class="form-label">ESIC Number <span
+                  class="opt">(optional)</span></label><input type="text" class="form-input" id="esic"
+                placeholder="ESIC reference number"></div>
+            <div class="form-group"><label class="form-label">Bank Account Number</label><input type="text"
+                class="form-input" id="bankAcc" placeholder="Account number"></div>
+            <div class="form-group"><label class="form-label">Bank Name</label><select class="form-select"
+                id="bankName">
+                <option value="">— Select Bank —</option>
+                <option>State Bank of India</option>
+                <option>HDFC Bank</option>
+                <option>ICICI Bank</option>
+                <option>Axis Bank</option>
+                <option>Kotak Mahindra Bank</option>
+                <option>Punjab National Bank</option>
+                <option>Bank of Baroda</option>
+                <option>Other</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">IFSC Code</label><input type="text" class="form-input"
+                id="ifsc" placeholder="e.g. SBIN0001234" style="text-transform:uppercase" maxlength="11"></div>
+            <div class="form-divider"></div>
+            <div class="form-group full">
+              <div class="form-label" style="margin-bottom:10px">Document Uploads <span class="opt">(PDF / JPG / PNG ·
+                  Max 5MB each)</span></div>
+              <div id="docUploadArea" style="display:flex;flex-direction:column;gap:10px"></div>
+              <button class="btn btn-ghost" style="margin-top:10px;width:fit-content;padding:8px 16px;font-size:.76rem"
+                onclick="addDocRow()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  style="width:13px;height:13px">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>Add Document</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STICKY ACTION BAR -->
+      <div class="form-action-bar">
+        <div class="form-action-left">
+          <button class="btn btn-ghost" onclick="clearForm()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>Reset Form</button>
+          <button class="btn btn-secondary" onclick="saveDraft()"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>Save as Draft</button>
+        </div>
+        <div class="form-action-right">
+          <button class="btn btn-primary" id="submitBtn" onclick="submitForm()"><svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>Create Employee</button>
+        </div>
+      </div>
+
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong
+          style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:.5px;font-weight:bold;">Thinkinfo
+          Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* Matrix Rain */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops, CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1); }
+        resize(); addEventListener('resize', resize); ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() { ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px "Courier New"'; for (var i = 0; i < drops.length; i++) { var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)]; ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y); ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18); if (y > H && Math.random() > 0.975) drops[i] = 0; drops[i]++; } requestAnimationFrame(loop); })();
+      })();
+
+      /* Sidebar */
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function (e) { e.stopPropagation(); sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) { if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open'); });
+
+      /* Clock */
+      function pad(n) { return n < 10 ? '0' + n : n; }
+      function tick() { var now = new Date(); document.getElementById('liveClock').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()); }
+      tick(); setInterval(tick, 1000);
+
+      /* Copyright */
+      var el = document.getElementById('copyright-year'); if (el) el.textContent = new Date().getFullYear();
+
+      /* Toast */
+      window.toast = function (msg, type) {
+        var wrap = document.getElementById('toastWrap'), t = document.createElement('div');
+        var icons = { success: '<polyline points="20 6 9 17 4 12"/>', error: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', warning: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>', info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/>' };
+        t.className = 'toast ' + (type || 'info');
+        t.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + icons[type || 'info'] + '</svg><span>' + msg + '</span>';
+        wrap.appendChild(t);
+        setTimeout(function () { t.classList.add('fade-out'); setTimeout(function () { t.remove(); }, 320); }, 3500);
+      };
+
+      /* Section Collapse */
+      window.toggleSection = function (bodyId, headerEl) {
+        var body = document.getElementById(bodyId), btn = headerEl.querySelector('.section-toggle');
+        body.classList.toggle('collapsed');
+        body.style.maxHeight = body.classList.contains('collapsed') ? '0' : body.scrollHeight + 200 + 'px';
+        btn.textContent = body.classList.contains('collapsed') ? '+' : '−';
+      };
+      document.querySelectorAll('.form-section-body').forEach(function (b) { b.style.maxHeight = b.scrollHeight + 200 + 'px'; });
+
+      /* Steps */
+      window.goToStep = function (n) {
+        document.querySelectorAll('.step-item').forEach(function (s) { var sn = parseInt(s.dataset.step); s.classList.remove('active', 'done'); if (sn === n) s.classList.add('active'); else if (sn < n) s.classList.add('done'); });
+        ['sec1Body', 'sec2Body', 'sec3Body', 'sec4Body'].forEach(function (id, i) {
+          if (i + 1 === n) { var body = document.getElementById(id); body.classList.remove('collapsed'); body.style.maxHeight = body.scrollHeight + 200 + 'px'; body.parentElement.querySelector('.section-toggle').textContent = '−'; body.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+        });
+      };
+
+      /* Radio / Checkbox */
+      window.selectRadio = function (groupId, el) { document.querySelectorAll('#' + groupId + ' .radio-item').forEach(function (r) { r.classList.remove('selected'); }); el.classList.add('selected'); };
+      window.toggleCheck = function (el) { el.classList.toggle('checked'); };
+
+      /* Avatar Upload */
+      window.handleAvatarUpload = function (input) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+        if (file.size > 2 * 1024 * 1024) { toast('Image too large. Max 2MB allowed.', 'error'); return; }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var preview = document.getElementById('avatarPreview'), initials = document.getElementById('avatarInitials');
+          initials.style.display = 'none';
+          var img = preview.querySelector('img') || document.createElement('img');
+          img.src = e.target.result; preview.appendChild(img);
+          document.getElementById('ppAvatar').textContent = '📷';
+          toast('Profile photo uploaded', 'success');
+        };
+        reader.readAsDataURL(file);
+      };
+
+      /* Live Preview */
+      window.updatePreview = function () {
+        var fn = document.getElementById('firstName').value.trim(), ln = document.getElementById('lastName').value.trim();
+        var fullName = [fn, ln].filter(Boolean).join(' ') || 'New Employee';
+        document.getElementById('ppName').textContent = fullName;
+        var initial = fn ? fn[0].toUpperCase() : (ln ? ln[0].toUpperCase() : '?');
+        document.getElementById('avatarInitials').textContent = initial;
+        document.getElementById('ppAvatar').textContent = initial;
+        document.getElementById('ppDept').textContent = document.getElementById('department').value || 'Department';
+        document.getElementById('ppRole').textContent = document.getElementById('designation').value || 'Role / Position';
+        document.getElementById('ppEmail').textContent = document.getElementById('workEmail').value || 'email@company.com';
+        document.getElementById('ppId').textContent = 'ID: ' + (document.getElementById('empId').value || '—');
+      };
+
+      /* Generate ID */
+      window.generateId = function () {
+        var dept = document.getElementById('department').value, prefix = 'EMP';
+        if (dept.includes('IT')) prefix = 'IT';
+        else if (dept.includes('HR') || dept.includes('Human')) prefix = 'HR';
+        else if (dept.includes('Finance')) prefix = 'FIN';
+        else if (dept.includes('Sales')) prefix = 'SLS';
+        else if (dept.includes('Ops')) prefix = 'OPS';
+        var id = prefix + String(Math.floor(1000 + Math.random() * 9000));
+        document.getElementById('empId').value = id;
+        updatePreview();
+        toast('Employee ID generated: ' + id, 'success');
+      };
+
+      /* Copy to Clipboard */
+      window.copyToClipboard = function (fieldId) {
+        var val = document.getElementById(fieldId).value;
+        if (!val) { toast('Nothing to copy', 'warning'); return; }
+        navigator.clipboard.writeText(val).then(function () { toast('Copied to clipboard', 'success'); });
+      };
+
+      /* Password Visibility */
+      window.togglePw = function (fieldId, btn) {
+        var input = document.getElementById(fieldId), isText = input.type === 'text';
+        input.type = isText ? 'password' : 'text';
+        btn.querySelector('svg').innerHTML = isText ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      };
+
+      /* Password Strength */
+      window.checkStrength = function (val) {
+        var segs = ['ps1', 'ps2', 'ps3', 'ps4'], label = document.getElementById('pwLabel');
+        segs.forEach(function (id) { document.getElementById(id).className = 'pw-seg'; });
+        if (!val) { label.textContent = 'Enter password'; label.style.color = 'var(--text-dim)'; return; }
+        var score = 0;
+        if (val.length >= 8) score++; if (/[A-Z]/.test(val)) score++; if (/[0-9]/.test(val)) score++; if (/[^A-Za-z0-9]/.test(val)) score++;
+        var levels = ['weak', 'fair', 'good', 'strong'], labels = ['Weak', 'Fair', 'Good', 'Strong'], colors = ['var(--red)', 'var(--amber)', 'var(--cyan)', 'var(--green)'];
+        for (var i = 0; i < score; i++) document.getElementById(segs[i]).classList.add(levels[score - 1]);
+        label.textContent = labels[score - 1] || 'Weak'; label.style.color = colors[score - 1] || 'var(--red)';
+      };
+
+      /* Permissions Table */
+      var modules = ['Dashboard', 'Attendance', 'Leave Management', 'Salary', 'Reports', 'Notifications', 'Settings'];
+      var permCols = ['View', 'Create', 'Edit', 'Delete', 'Approve'];
+      var permissions = {};
+      modules.forEach(function (m) { permissions[m] = { View: true, Create: false, Edit: false, Delete: false, Approve: false }; if (m === 'Attendance' || m === 'Leave Management') permissions[m].Create = true; });
+
+      function renderPermTable() {
+        var tbody = document.getElementById('permBody'); tbody.innerHTML = '';
+        modules.forEach(function (m) {
+          var tr = document.createElement('tr'); tr.innerHTML = '<td class="module-name">' + m + '</td>';
+          permCols.forEach(function (col) { var on = permissions[m][col]; tr.innerHTML += '<td><div class="perm-toggle' + (on ? ' on' : '') + '" onclick="togglePerm(\'' + m + '\',\'' + col + '\',this)"></div></td>'; });
+          tbody.appendChild(tr);
+        });
+      }
+
+      window.togglePerm = function (mod, col, el) { permissions[mod][col] = !permissions[mod][col]; el.classList.toggle('on'); };
+      window.setAllPerms = function (val) {
+        modules.forEach(function (m) { permCols.forEach(function (c) { permissions[m][c] = val; }); });
+        renderPermTable(); toast(val ? 'All permissions enabled' : 'All permissions disabled', val ? 'success' : 'warning');
+      };
+      renderPermTable();
+
+      /* Document Upload Rows */
+      var docRowCount = 0;
+      var docTypes = ['Aadhaar Card', 'PAN Card', 'Passport', 'Degree Certificate', 'Experience Letter', 'Offer Letter', 'Resume/CV', 'Bank Passbook', 'Other'];
+
+      function addDocRow() {
+        docRowCount++;
+        var area = document.getElementById('docUploadArea'), row = document.createElement('div');
+        row.id = 'docRow' + docRowCount;
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(15,22,32,.6);border:1px solid var(--border);border-radius:8px';
+        row.innerHTML = '<select class="form-select" style="flex:0 0 180px;padding:8px 12px;font-size:.76rem">' + docTypes.map(function (t) { return '<option>' + t + '</option>'; }).join('') + '</select>'
+          + '<input type="text" class="form-input" placeholder="File name or reference" style="flex:1;padding:8px 12px;font-size:.76rem">'
+          + '<label style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(14,239,255,.07);color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:7px;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Browse<input type="file" style="display:none" accept=".pdf,.jpg,.jpeg,.png"></label>'
+          + '<button onclick="removeDocRow(' + docRowCount + ')" style="width:28px;height:28px;background:rgba(255,58,74,.08);border:1px solid var(--red-dim);border-radius:6px;color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+        area.appendChild(row);
+      }
+
+      window.removeDocRow = function (id) { var r = document.getElementById('docRow' + id); if (r) r.remove(); };
+      window.addDocRow = addDocRow;
+      addDocRow(); addDocRow();
+
+      /* Form Validation */
+      var required = ['firstName', 'lastName', 'dob', 'gender', 'personalEmail', 'phone', 'address', 'empId', 'workEmail', 'department', 'designation', 'doj', 'username', 'sysRole', 'password'];
+
+      function validate() {
+        var ok = true;
+        required.forEach(function (id) {
+          var el = document.getElementById(id), errEl = document.getElementById('err-' + id);
+          if (!el) return;
+          if (!el.value.trim()) { el.classList.add('error'); if (errEl) errEl.classList.add('visible'); ok = false; }
+          else { el.classList.remove('error'); if (errEl) errEl.classList.remove('visible'); }
+        });
+        var pw = document.getElementById('password').value, cpw = document.getElementById('confirmPw').value, cpwErr = document.getElementById('err-confirmPw');
+        if (pw && cpw && pw !== cpw) { document.getElementById('confirmPw').classList.add('error'); if (cpwErr) cpwErr.classList.add('visible'); ok = false; }
+        else { document.getElementById('confirmPw').classList.remove('error'); if (cpwErr) cpwErr.classList.remove('visible'); }
+        return ok;
+      }
+
+      /* Submit */
+      window.submitForm = function () {
+        if (!validate()) { toast('Please fill all required fields', 'error'); var firstErr = document.querySelector('.form-input.error, .form-select.error'); if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+        var btn = document.getElementById('submitBtn');
+        btn.classList.add('btn-loading'); btn.innerHTML = '<div class="btn-spinner"></div> Creating...';
+        setTimeout(function () {
+          btn.classList.remove('btn-loading');
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Create Employee';
+          var name = (document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value).trim();
+          var id = document.getElementById('empId').value;
+          toast('✅ Employee ' + name + ' (' + id + ') created successfully!', 'success');
+          document.querySelectorAll('.step-item').forEach(function (s) { s.classList.remove('active'); s.classList.add('done'); });
+        }, 1800);
+      };
+
+      /* Save Draft */
+      window.saveDraft = function () { toast('Draft saved. You can return to complete this form later.', 'info'); };
+
+      /* Clear Form */
+      window.clearForm = function () {
+        if (!confirm('Are you sure you want to reset the form? All entered data will be lost.')) return;
+        document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(function (el) { el.value = ''; el.classList.remove('error'); });
+        document.querySelectorAll('.form-error-msg.visible').forEach(function (el) { el.classList.remove('visible'); });
+        document.querySelectorAll('.radio-item.selected').forEach(function (el) { el.classList.remove('selected'); });
+        document.querySelector('#empType .radio-item').classList.add('selected');
+        document.querySelector('#empStatus .radio-item').classList.add('selected');
+        document.getElementById('ppName').textContent = 'New Employee';
+        document.getElementById('ppAvatar').textContent = '?';
+        document.getElementById('avatarInitials').textContent = '?';
+        document.getElementById('ppDept').textContent = 'Department';
+        document.getElementById('ppRole').textContent = 'Role / Position';
+        document.getElementById('ppEmail').textContent = 'email@company.com';
+        document.getElementById('ppId').textContent = 'ID: —';
+        document.querySelectorAll('.step-item').forEach(function (s) { s.classList.remove('active', 'done'); });
+        document.querySelector('[data-step="1"]').classList.add('active');
+        toast('Form has been reset', 'warning');
+      };
+
+      /* Notification badge */
+      (function () {
+        try {
+          var count = parseInt(localStorage.getItem('mgrNotifUnread') || '3', 10);
+          ['navNotifBadge', 'headerBellBadge'].forEach(function (id) { var b = document.getElementById(id); if (b) { if (count > 0) { b.textContent = count; } else { b.style.display = 'none'; } } });
+        } catch (e) { }
+      })();
+
+    })();
+  </script>
+</body>
+
+</html>
