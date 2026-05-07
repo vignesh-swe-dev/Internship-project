@@ -1,0 +1,888 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thinkinfo Expert Solutions</title>
+  <link rel="icon" href="./Assets/logo.png" type="image/png">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --blue: #1a6eff;
+      --blue-dim: rgba(26, 110, 255, .3);
+      --blue-glow: 0 0 14px rgba(26, 110, 255, .4);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .5
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(0, 230, 118, .1);
+      color: var(--green);
+      border-left-color: var(--green);
+      box-shadow: inset 0 0 16px rgba(0, 230, 118, .06)
+    }
+
+    /* MAIN */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep {
+      color: var(--text-dim)
+    }
+
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* FORM CARD */
+    .form-card {
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .06);
+      overflow: hidden
+    }
+
+    .form-card-header {
+      padding: 14px 20px;
+      background: linear-gradient(90deg, var(--blue) 0%, #0047cc 100%);
+      position: relative;
+      overflow: hidden
+    }
+
+    .form-card-header::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 70%, rgba(255, 255, 255, .06));
+      pointer-events: none
+    }
+
+    .form-card-header h2 {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .form-card-body {
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px
+    }
+
+    /* FORM ELEMENTS */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px
+    }
+
+    .field-label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .4px
+    }
+
+    .field-select,
+    .field-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(15, 22, 32, .9);
+      border: 1px solid rgba(14, 239, 255, .2);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .25s, box-shadow .25s, background .2s;
+      appearance: none;
+      -webkit-appearance: none;
+      position: relative;
+      z-index: 5;
+      pointer-events: auto;
+    }
+
+    .field-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230ef' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    .field-select:focus,
+    .field-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .12);
+      background: rgba(20, 28, 42, .95);
+      z-index: 6;
+    }
+
+    .field-select option {
+      background: #0f1620;
+      color: var(--text)
+    }
+
+    .field-select:hover,
+    .field-input:hover {
+      border-color: rgba(14, 239, 255, .35)
+    }
+
+    /* Two-col row */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: .85rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .2s, filter .2s;
+      letter-spacing: .3px
+    }
+
+    .btn:active {
+      transform: scale(.97);
+    }
+
+    .btn {
+      position: relative;
+      z-index: 5;
+      pointer-events: auto;
+    }
+
+    .btn-fetch {
+      width: 100%;
+      justify-content: center;
+      background: linear-gradient(90deg, var(--blue), #0047cc);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(26, 110, 255, .35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-fetch::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 60%, rgba(255, 255, 255, .08));
+      pointer-events: none
+    }
+
+    .btn-fetch:hover {
+      box-shadow: 0 4px 20px rgba(26, 110, 255, .55);
+      filter: brightness(1.08)
+    }
+
+    .btn-save {
+      background: linear-gradient(135deg, var(--green), #00b85c);
+      color: #000;
+      font-weight: 700;
+      box-shadow: 0 2px 12px var(--green-dim);
+    }
+
+    .btn-save:hover {
+      box-shadow: var(--green-glow), 0 4px 20px rgba(0, 230, 118, .3);
+      filter: brightness(1.08)
+    }
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      border: none;
+      margin: 4px 0
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #fff;
+      background: rgba(0, 230, 118, .15);
+      border: 1px solid var(--green);
+      box-shadow: var(--green-glow);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .3s, transform .3s;
+      pointer-events: none
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0)
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 44px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim)
+    }
+
+    /* INPUT NUMBER: hide arrows */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0
+    }
+
+    input[type=number] {
+      appearance: textfield;
+      -moz-appearance: textfield
+    }
+
+    @media(max-width:900px) {
+      :root {
+        --sidebar-w: 0
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 240px;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .field-row {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" style="display:block;" />
+      <span class="sidebar-title">Manager Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">M</div>
+      <div class="user-info">
+        <div class="user-name">Manager, IT</div>
+        <div class="user-role">IT Department</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="manager-home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg><span>Home</span></a>
+      <a href="manager-profile-edit.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg><span>View/Edit Profile</span></a>
+      <a href="manager-add-salary.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg><span>Add Salary</span></a>
+      <a href="manager-edit-salary.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg><span>Edit Salary</span></a>
+      <a href="manager-take-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg><span>Take Attendance</span></a>
+      <a href="manager-view-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg><span>View/Update Attendance</span></a>
+      <a href="attendance-approval.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>Attendance Approvals</span><span class="nav-badge" id="navBadge">3</span></a>
+      <a href="manager-notifications.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>View Notifications</span><span class="nav-badge" id="navNotifBadge">3</span></a>
+      <a href="manager-apply-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg><span>Apply For Leave</span></a>
+      <a href="manager-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg><span>Add Offer Letter</span></a>
+      <a href="manager-experience-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+        </svg><span>Add Experience Letter</span></a>
+      <a href="manager-intern-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="12" y1="17" x2="8" y2="17" /></svg><span>Intern Offer Letter</span></a>
+      <a href="manager-intern-certificate.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg><span>Intern Certificate</span></a>
+      <a href="manager-add-employee.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg><span>Add New Employee</span></a>
+      <a href="manager-add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manager-manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="manager-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg><span>Feedback</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Salary Upload</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="manager-home.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Salary Upload</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="form-card">
+        <!-- Card Header -->
+        <div class="form-card-header">
+          <h2>
+            <svg style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;display:inline" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="16" />
+              <line x1="8" y1="12" x2="16" y2="12" />
+            </svg>
+            Salary Upload
+          </h2>
+        </div>
+
+        <!-- Card Body -->
+        <div class="form-card-body">
+
+          <!-- Department -->
+          <div class="field-group">
+            <label class="field-label" for="deptSelect">Department</label>
+            <select class="field-select" id="deptSelect">
+              <option value="">-- Select Department --</option>
+              <option value="it" selected>Frontend Developer</option>
+              <option value="hr">Human Resources</option>
+              <option value="finance">Finance</option>
+              <option value="marketing">Marketing</option>
+              <option value="ops">Operations</option>
+            </select>
+          </div>
+
+          <!-- Fetch Employees Button -->
+          <div>
+            <button class="btn btn-fetch" id="fetchBtn" onclick="fetchEmployees()">
+              <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Fetch Employees
+            </button>
+          </div>
+
+          <hr class="divider" />
+
+          <!-- Employee List -->
+          <div class="field-group" id="employeeSection">
+            <label class="field-label" for="empSelect">Employee List</label>
+            <select class="field-select" id="empSelect" onchange="loadEmployeeData()">
+              <option value="">-- Select Employee --</option>
+              <option value="emp1" selected>Frontend Employee</option>
+              <option value="emp2">Jane Smith</option>
+              <option value="emp3">Alex Johnson</option>
+            </select>
+          </div>
+
+          <!-- Base Salary + CTC -->
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label" for="baseSalary">Base Salary</label>
+              <input class="field-input" type="number" id="baseSalary" placeholder="e.g. 400000" value="400000" />
+            </div>
+            <div class="field-group">
+              <label class="field-label" for="ctcSalary">CTC</label>
+              <input class="field-input" type="number" id="ctcSalary" placeholder="e.g. 700000" value="700000" />
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div>
+            <button class="btn btn-save" onclick="saveSalary()">
+              <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Save Salary
+            </button>
+          </div>
+
+        </div><!-- /form-card-body -->
+      </div><!-- /form-card -->
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ── Matrix Rain ── */
+      (function matrix() {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオカキクケコ01234ABCDEFabcdef<>{}[]';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1) }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.55)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.18)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++
+          }
+          requestAnimationFrame(loop)
+        })()
+      })();
+
+      /* ── Mock employee data ── */
+      var employeeData = {
+        emp1: { base: 400000, ctc: 700000 },
+        emp2: { base: 520000, ctc: 900000 },
+        emp3: { base: 350000, ctc: 620000 }
+      };
+
+      /* ── Fetch Employees ── */
+      window.fetchEmployees = function () {
+        var btn = document.getElementById('fetchBtn'), dept = document.getElementById('deptSelect').value;
+        if (!dept) { showToast('Please select a department first.', 'warn'); return }
+        btn.textContent = 'Fetching…'; btn.disabled = true;
+        setTimeout(function () {
+          btn.innerHTML = '<svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Fetch Employees';
+          btn.disabled = false;
+          showToast('Employees fetched successfully!', 'success')
+        }, 800)
+      };
+
+      /* ── Load employee salary ── */
+      window.loadEmployeeData = function () {
+        var emp = document.getElementById('empSelect').value, d = employeeData[emp];
+        if (d) { document.getElementById('baseSalary').value = d.base; document.getElementById('ctcSalary').value = d.ctc }
+        else { document.getElementById('baseSalary').value = ''; document.getElementById('ctcSalary').value = '' }
+      };
+
+      /* ── Save salary ── */
+      window.saveSalary = function () {
+        var emp = document.getElementById('empSelect').value,
+          base = document.getElementById('baseSalary').value,
+          ctc = document.getElementById('ctcSalary').value;
+        if (!emp) { showToast('Please select an employee.', 'warn'); return }
+        if (!base || !ctc) { showToast('Please fill in both salary fields.', 'warn'); return }
+        if (Number(ctc) < Number(base)) { showToast('CTC must be ≥ Base Salary.', 'warn'); return }
+        showToast('Salary saved successfully!', 'success')
+      };
+
+      /* ── Toast ── */
+      function showToast(msg, type) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.background = type === 'success' ? 'rgba(0,230,118,.15)' : 'rgba(255,170,0,.15)';
+        t.style.borderColor = type === 'success' ? '#00e676' : '#ffaa00';
+        t.style.boxShadow = type === 'success' ? '0 0 12px rgba(0,230,118,.25)' : '0 0 12px rgba(255,170,0,.25)';
+        t.classList.add('show');
+        clearTimeout(t._timer); t._timer = setTimeout(function () { t.classList.remove('show') }, 3000)
+      }
+
+      /* ── Sidebar toggle ── */
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.querySelector('.sidebar');
+      menuToggle && menuToggle.addEventListener('click', function () { sidebar.classList.toggle('open') });
+      document.addEventListener('click', function (e) { if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) sidebar.classList.remove('open') });
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var c = parseInt(localStorage.getItem('mgrNotifUnread') || '3', 10);
+        var b = document.getElementById('navNotifBadge');
+        if (b) { if (c > 0) { b.textContent = c; b.style.display = ''; } else { b.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script></body>
+
+</html>
