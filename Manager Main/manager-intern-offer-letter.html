@@ -1,0 +1,1316 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intern Offer Letter — Manager Panel</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .45
+    }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--cyan-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: .62rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(255, 170, 0, .15);
+      color: var(--amber);
+      border: 1px solid var(--amber-dim)
+    }
+
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start
+    }
+
+    .panel {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .07);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .12), inset 0 1px 0 rgba(14, 239, 255, .1)
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      background: rgba(15, 22, 32, .75);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .panel-title {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .panel-title svg {
+      width: 15px;
+      height: 15px;
+      filter: drop-shadow(0 0 5px var(--cyan))
+    }
+
+    .panel-badge {
+      font-size: .68rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+      letter-spacing: .3px
+    }
+
+    .panel-body {
+      padding: 20px
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .form-group.full {
+      grid-column: 1/-1
+    }
+
+    .form-label {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: .6px;
+      text-transform: uppercase
+    }
+
+    .req {
+      color: var(--red);
+      margin-left: 2px
+    }
+
+    .form-input,
+    .form-select {
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 13px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      width: 100%
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07);
+      background: rgba(14, 239, 255, .05)
+    }
+
+    .form-input::placeholder {
+      color: var(--text-dim)
+    }
+
+    .form-input.error,
+    .form-select.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(255, 58, 74, .08)
+    }
+
+    .form-select option {
+      background: var(--bg-2)
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.6) hue-rotate(180deg) brightness(1.2);
+      cursor: pointer
+    }
+
+    .form-divider {
+      grid-column: 1/-1;
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0
+    }
+
+    .form-sec {
+      grid-column: 1/-1;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    .avatar-upload {
+      grid-column: 1/-1;
+      display: flex;
+      align-items: center;
+      gap: 16px
+    }
+
+    .avatar-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(14, 239, 255, .1), rgba(0, 230, 118, .08));
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cyan);
+      flex-shrink: 0;
+      overflow: hidden
+    }
+
+    .avatar-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .avatar-upload-info p {
+      font-size: .76rem;
+      color: var(--text-dim);
+      margin-bottom: 8px
+    }
+
+    .btn-upload {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: none;
+      color: var(--text-dim);
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .btn-upload:hover {
+      background: rgba(14, 239, 255, .07);
+      color: var(--cyan);
+      border-color: var(--cyan-dim)
+    }
+
+    .btn-upload svg {
+      width: 13px;
+      height: 13px
+    }
+
+    #avatarInput {
+      display: none
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 7px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .4px;
+      transition: background .2s, border-color .2s, box-shadow .2s, transform .15s;
+      border: 1px solid transparent
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .2), rgba(14, 239, 255, .1));
+      border-color: var(--cyan-dim);
+      color: var(--cyan)
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .32), rgba(14, 239, 255, .18));
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .2), rgba(0, 230, 118, .1));
+      border-color: var(--green-dim);
+      color: var(--green)
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .32), rgba(0, 230, 118, .18));
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .btn-danger {
+      background: none;
+      border-color: var(--border);
+      color: var(--text-dim)
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 58, 74, .1);
+      border-color: var(--red-dim);
+      color: var(--red)
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, rgba(255, 170, 0, .2), rgba(255, 170, 0, .1));
+      border-color: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .btn-amber:hover {
+      background: linear-gradient(135deg, rgba(255, 170, 0, .32), rgba(255, 170, 0, .18));
+      border-color: var(--amber);
+      box-shadow: var(--amber-glow)
+    }
+
+    .print-action-bar {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      background: rgba(14, 239, 255, .03);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .print-bar-label {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      margin-right: 4px;
+      flex-shrink: 0
+    }
+
+    .doc-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .7rem;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(14, 239, 255, .08);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim)
+    }
+
+    .doc-status-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 6px var(--cyan);
+      animation: pulse 1.6s ease infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    .letters-wrap {
+      background: #d8d8d8;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 0 40px rgba(14, 239, 255, .12), 0 0 0 1px rgba(14, 239, 255, .2)
+    }
+
+    .ol-page {
+      background: #fff;
+      font-family: Arial, Helvetica, sans-serif;
+      overflow: hidden
+    }
+
+    .ol-hdr {
+      display: flex;
+      min-height: 105px
+    }
+
+    .ol-hdr-logo {
+      width: 135px;
+      flex-shrink: 0;
+      background: #2e1c6e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      gap: 6px
+    }
+
+    .ol-hdr-logo-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden
+    }
+
+    .ol-hdr-logo-circle svg {
+      width: 34px;
+      height: 34px
+    }
+
+    .ol-hdr-brand {
+      text-align: center;
+      line-height: 1.25
+    }
+
+    .ol-hdr-brand-top {
+      color: #e8650a;
+      font-size: .7rem;
+      font-weight: 900;
+      display: block
+    }
+
+    .ol-hdr-brand-bot {
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 900;
+      display: block
+    }
+
+    .cert-co-hdr {
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+      flex: 1
+    }
+
+    .cert-co-name {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #1a1848
+    }
+
+    .cert-co-sub {
+      font-size: .62rem;
+      color: #444;
+      margin-top: 2px
+    }
+
+    .cert-co-addr {
+      font-size: .6rem;
+      color: #333;
+      margin-top: 2px
+    }
+
+    .cert-co-ids {
+      font-size: .58rem;
+      font-weight: 700;
+      color: #222;
+      margin-top: 3px
+    }
+
+    .cert-co-tel {
+      font-size: .58rem;
+      color: #333;
+      margin-top: 1px
+    }
+
+    .ol-hdr-bar {
+      width: 20px;
+      background: #e8650a;
+      flex-shrink: 0
+    }
+
+    .ol-body {
+      padding: 16px 22px 20px;
+      font-size: .8rem;
+      color: #1a1a1a;
+      line-height: 1.8
+    }
+
+    .ol-date-line {
+      text-align: right;
+      font-weight: 700;
+      font-size: .82rem;
+      margin-bottom: 16px
+    }
+
+    .ol-to {
+      margin-bottom: 18px;
+      line-height: 1.7
+    }
+
+    .ol-to-label {
+      font-weight: 700;
+      font-size: .82rem;
+      margin-bottom: 2px
+    }
+
+    .ol-greeting {
+      font-weight: 700;
+      font-size: .82rem;
+      margin-bottom: 12px
+    }
+
+    .ol-para {
+      margin-bottom: 12px;
+      text-align: justify
+    }
+
+    .ol-regards {
+      margin-top: 20px
+    }
+
+    .ol-regards-label {
+      font-weight: 700;
+      font-size: .82rem;
+      margin-bottom: 4px
+    }
+
+    .ol-regards-name {
+      font-weight: 700;
+      font-size: .82rem
+    }
+
+    .ol-regards-link {
+      font-size: .76rem;
+      color: #1155cc
+    }
+
+    .ol-footer {
+      display: flex;
+      height: 14px
+    }
+
+    .ol-footer-purple {
+      flex: 1;
+      background: #2e1c6e
+    }
+
+    .ol-footer-orange {
+      width: 60px;
+      background: #e8650a
+    }
+
+    .footer {
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim);
+      background: rgba(10, 15, 24, .6)
+    }
+
+    .toast-wrap {
+      position: fixed;
+      bottom: 60px;
+      right: 24px;
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: rgba(10, 15, 24, .96);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      font-size: .8rem;
+      font-weight: 600;
+      box-shadow: var(--green-glow), 0 8px 24px rgba(0, 0, 0, .5);
+      animation: toastIn .3s ease;
+      max-width: 300px
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0
+    }
+
+    .toast.warn {
+      border-color: var(--amber-dim);
+      color: var(--amber);
+      box-shadow: var(--amber-glow), 0 8px 24px rgba(0, 0, 0, .5)
+    }
+
+    .toast.err {
+      border-color: var(--red-dim);
+      color: var(--red)
+    }
+
+    .toast.out {
+      animation: toastOut .35s ease forwards
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0)
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+    }
+
+    @media(max-width:1050px) {
+      .layout {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        z-index: 100;
+        transition: transform .3s
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .form-group.full {
+        grid-column: 1
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="./Assets/logo.png" alt="TES Logo" width="40" height="40" onerror="this.style.display='none'" />
+      <span class="sidebar-title">Manager Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">M</div>
+      <div class="user-info">
+        <div class="user-name">Manager, IT</div>
+        <div class="user-role">IT Department</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="manager-home.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg><span>Dashboard</span></a>
+      <a href="manager-profile-edit.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg><span>View/Edit Profile</span></a>
+      <a href="manager-add-salary.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg><span>Add Salary</span></a>
+      <a href="manager-edit-salary.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg><span>Edit Salary</span></a>
+      <a href="manager-take-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg><span>Take Attendance</span></a>
+      <a href="manager-view-attendance.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg><span>View/Update Attendance</span></a>
+      <a href="attendance-approval.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>Attendance Approvals</span><span class="nav-badge">3</span></a>
+      <a href="manager-notifications.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg><span>View Notifications</span><span class="nav-badge" id="navNotifBadge">3</span></a>
+      <a href="manager-apply-leave.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg><span>Apply For Leave</span></a>
+      <a href="manager-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg><span>Add Offer Letter</span></a>
+      <a href="manager-experience-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+        </svg><span>Add Experience Letter</span></a>
+      <a href="manager-intern-offer-letter.html" class="nav-link active"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg><span>Intern Offer Letter</span></a>
+      <a href="manager-intern-certificate.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="6" />
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+        </svg><span>Intern Certificate</span></a>
+      <a href="manager-add-employee.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg><span>Add New Employee</span></a>
+      <a href="manager-add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manager-manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="manager-feedback.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg><span>Feedback</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg></button>
+        <h1 class="page-title">Intern Offer Letter</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="manager-home.html" class="breadcrumb-link">Dashboard</a><span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Intern Offer Letter</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="layout">
+        <!-- FORM -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>Offer Letter Details</div>
+            <span class="panel-badge">Offer Letter</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+              <div class="avatar-upload">
+                <div class="avatar-preview" id="avatarPreview">?</div>
+                <div class="avatar-upload-info">
+                  <p>Upload intern photo (optional)</p>
+                  <button class="btn-upload" onclick="document.getElementById('avatarInput').click()"><svg
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>Upload Photo</button>
+                  <input type="file" id="avatarInput" accept="image/*" />
+                </div>
+              </div>
+              <div class="form-divider"></div>
+              <div class="form-sec">Personal Information</div>
+              <div class="form-group"><label class="form-label">First Name <span class="req">*</span></label><input
+                  type="text" id="firstName" class="form-input" placeholder="e.g. Sridhar" /></div>
+              <div class="form-group"><label class="form-label">Last Name <span class="req">*</span></label><input
+                  type="text" id="lastName" class="form-input" placeholder="e.g. M" /></div>
+              <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input
+                  type="email" id="email" class="form-input" placeholder="intern@email.com" /></div>
+              <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="phone"
+                  class="form-input" placeholder="+91 9876543210" /></div>
+              <div class="form-group"><label class="form-label">Gender</label><select id="gender" class="form-select">
+                  <option value="">— Select —</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select></div>
+              <div class="form-group"><label class="form-label">Register No.</label><input type="text" id="regNo"
+                  class="form-input" placeholder="e.g. 622123111103" /></div>
+              <div class="form-group"><label class="form-label">Degree / Branch</label><input type="text" id="degree"
+                  class="form-input" placeholder="e.g. BE Cyber Security" /></div>
+              <div class="form-group"><label class="form-label">College / University <span
+                    class="req">*</span></label><input type="text" id="college" class="form-input"
+                  placeholder="e.g. Paavai Engineering College" /></div>
+              <div class="form-divider"></div>
+              <div class="form-sec">Internship Details</div>
+              <div class="form-group"><label class="form-label">Department <span class="req">*</span></label><select
+                  id="department" class="form-select">
+                  <option value="">— Select —</option>
+                  <option>IT</option>
+                  <option>Cyber Security</option>
+                  <option>HR</option>
+                  <option>Sales</option>
+                  <option>Frontend</option>
+                  <option>Micro Biology</option>
+                </select></div>
+              <div class="form-group"><label class="form-label">Role / Domain <span class="req">*</span></label><input
+                  type="text" id="role" class="form-input" placeholder="e.g. Cyber Security Intern" /></div>
+              <div class="form-group"><label class="form-label">Start Date <span class="req">*</span></label><input
+                  type="date" id="startDate" class="form-input" /></div>
+              <div class="form-group"><label class="form-label">End Date <span class="req">*</span></label><input
+                  type="date" id="endDate" class="form-input" /></div>
+              <div class="form-group"><label class="form-label">Stipend (₹/month)</label><input type="number"
+                  id="stipend" class="form-input" placeholder="e.g. 5000" /></div>
+              <div class="form-group"><label class="form-label">Status</label><select id="status" class="form-select">
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                </select></div>
+              <div class="form-divider"></div>
+              <div class="form-sec">Authorised By</div>
+              <div class="form-group"><label class="form-label">Manager Name <span class="req">*</span></label><input
+                  type="text" id="managerName" class="form-input" value="Mr. S. Gokul Krish" /></div>
+              <div class="form-group"><label class="form-label">Manager Title</label><input type="text"
+                  id="managerTitle" class="form-input" value="Founder &amp; CEO" /></div>
+              <div class="form-group"><label class="form-label">Manager Email</label><input type="email"
+                  id="managerEmail" class="form-input" value="gokulkrish@thinkinfoexpertsolutions.com" /></div>
+              <div class="form-group"><label class="form-label">Letter Date</label><input type="date" id="issueDate"
+                  class="form-input" /></div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-danger" id="btnReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+                </svg>Reset</button>
+              <button class="btn btn-primary" id="btnPreview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>Preview</button>
+              <button class="btn btn-success" id="btnSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>Save &amp; Generate</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-outer">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>Offer Letter Preview</div>
+              <div class="doc-status-badge"><span class="dot"></span><span id="previewStatus">Fill form to
+                  preview</span></div>
+            </div>
+            <div class="print-action-bar">
+              <span class="print-bar-label">Actions:</span>
+              <button class="btn btn-amber" id="btnPrint" style="padding:6px 14px;font-size:.76rem"><svg
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>Print Offer Letter</button>
+              <button class="btn btn-primary" id="btnDownload"
+                style="padding:6px 14px;font-size:.76rem;margin-left:auto"><svg viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" style="width:13px;height:13px">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>Download PDF</button>
+            </div>
+            <div class="panel-body" style="padding:12px">
+              <div class="letters-wrap" id="lettersWrap">
+                <div class="ol-page" id="olPageDoc">
+                  <div class="ol-hdr">
+                    <div class="ol-hdr-logo">
+                      <div class="ol-hdr-logo-circle"><img src="./Assets/logo.png" alt="TES"
+                          style="width:48px;height:48px;object-fit:contain;border-radius:50%" /></div>
+                      <div class="ol-hdr-brand"><span class="ol-hdr-brand-top">ThinkinfoExpert</span><span
+                          class="ol-hdr-brand-bot">Solutions</span></div>
+                    </div>
+                    <div class="cert-co-hdr">
+                      <div class="cert-co-name">Thinkinfo Expert Solutions</div>
+                      <div class="cert-co-sub">(A Cyber Security Product and Consulting Services Company)</div>
+                      <div class="cert-co-addr">275,Kalarkadu,Thiruvagoundanoor,Suramangalam,Salem-636005</div>
+                      <div class="cert-co-ids">UDAYAM NO: UDYAM-TN-20-0032126 &nbsp;&nbsp; GST NO:33BTUPG8040C1ZS</div>
+                      <div class="cert-co-tel">Tel: +91 93428 77730 &nbsp;&nbsp; www.thinkinfoexpertsolutions.com</div>
+                    </div>
+                    <div class="ol-hdr-bar"></div>
+                  </div>
+                  <div class="ol-body">
+                    <div class="ol-date-line">Date: <span id="ol-date">—</span></div>
+                    <div class="ol-to">
+                      <div class="ol-to-label">To:</div>
+                      <div id="ol-name" style="font-weight:600">[ Intern Name ]</div>
+                      <div id="ol-reg"></div>
+                      <div id="ol-degree"></div>
+                      <div id="ol-college"></div>
+                    </div>
+                    <div class="ol-greeting">Dear <span id="ol-dear">[ First Name ]</span>,</div>
+                    <div class="ol-para">We are pleased to inform you that you have been selected for the position of
+                      <strong id="ol-role">[ Role ]</strong> at Thinkinfo Expert Solutions, Salem. This internship will
+                      be for a duration of <strong id="ol-duration">—</strong>, commencing from <strong
+                        id="ol-start-month">—</strong> and concluding in <strong id="ol-end-month">—</strong>.</div>
+                    <div class="ol-para">During the internship period, you will work closely with our technical and
+                      security teams and actively participate in real-time projects. You will gain hands-on experience
+                      in identifying, analyzing, and mitigating cybersecurity threats, as well as exposure to
+                      industry-standard tools, practices, and methodologies. This program is designed to enhance your
+                      technical expertise, analytical thinking, problem-solving skills, and overall professional
+                      understanding of the cybersecurity domain. We believe this internship will be a valuable and
+                      rewarding learning experience that will contribute significantly to your professional growth and
+                      future career. We look forward to welcoming you to Thinkinfo Expert Solutions and supporting you
+                      throughout your learning journey.</div>
+                    <div class="ol-para">We wish you a successful and enriching internship experience with us.</div>
+                    <div class="ol-regards">
+                      <div class="ol-regards-label">With regards:</div>
+                      <div class="ol-regards-name" id="ol-mgr-name">Mr. S. Gokul Krish</div>
+                      <div class="ol-regards-link">Email: <span
+                          id="ol-mgr-email">gokulkrish@thinkinfoexpertsolutions.com</span></div>
+                      <div class="ol-regards-link">www.thinkinfoexpertsolutions.com</div>
+                    </div>
+                  </div>
+                  <div class="ol-footer">
+                    <div class="ol-footer-purple"></div>
+                    <div class="ol-footer-orange"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong
+          style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6);letter-spacing:0.5px;">Thinkinfo
+          Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>
+    </footer>
+  </div>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    (function () {
+      'use strict';
+      (function () { var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops, CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\'; function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = Array(cols).fill(1); } resize(); addEventListener('resize', resize); ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H); (function loop() { ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H); ctx.font = '14px "Courier New"'; for (var i = 0; i < drops.length; i++) { var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)]; ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y); ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18); if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++; } requestAnimationFrame(loop); })() })();
+      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      function ddmmyyyy(v) { if (!v) return '—'; var d = new Date(v + 'T00:00:00'); return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + d.getFullYear(); }
+      function getMonth(v) { return v ? MONTHS[new Date(v + 'T00:00:00').getMonth()] : '—'; }
+      function monthDiff(s, e) { if (!s || !e) return '—'; var a = new Date(s + 'T00:00:00'), b = new Date(e + 'T00:00:00'); var m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth()); if (m <= 0) return '—'; if (m === 3) return 'three (3) months'; return m + ' month' + (m > 1 ? 's' : ''); }
+      function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+      var avatarDataUrl = null;
+      document.getElementById('avatarInput').addEventListener('change', function (e) { var file = e.target.files[0]; if (!file) return; var r = new FileReader(); r.onload = function (ev) { avatarDataUrl = ev.target.result; document.getElementById('avatarPreview').innerHTML = '<img src="' + avatarDataUrl + '"/>'; updatePreview(); }; r.readAsDataURL(file); });
+      function updatePreview() {
+        var first = document.getElementById('firstName').value.trim(), last = document.getElementById('lastName').value.trim();
+        var name = [first, last].filter(Boolean).join(' ') || '[ Intern Name ]';
+        var regNo = document.getElementById('regNo').value.trim(), degree = document.getElementById('degree').value.trim(), college = document.getElementById('college').value.trim();
+        var role = document.getElementById('role').value.trim() || '[ Role ]';
+        var start = document.getElementById('startDate').value, end = document.getElementById('endDate').value;
+        var mName = document.getElementById('managerName').value.trim() || 'Mr. S. Gokul Krish';
+        var mEmail = document.getElementById('managerEmail').value.trim() || 'gokulkrish@thinkinfoexpertsolutions.com';
+        var iDate = document.getElementById('issueDate').value, today = new Date().toISOString().slice(0, 10);
+        setText('ol-date', ddmmyyyy(iDate || today)); setText('ol-name', name);
+        var regEl = document.getElementById('ol-reg'); if (regEl) regEl.textContent = regNo ? 'Reg No ' + regNo : '';
+        var degEl = document.getElementById('ol-degree'); if (degEl) degEl.textContent = degree || '';
+        var colEl = document.getElementById('ol-college'); if (colEl) colEl.textContent = college || '';
+        setText('ol-dear', first || '[ First Name ]'); setText('ol-role', role); setText('ol-duration', monthDiff(start, end)); setText('ol-start-month', getMonth(start)); setText('ol-end-month', getMonth(end)); setText('ol-mgr-name', mName); setText('ol-mgr-email', mEmail);
+        var hasCore = first && college && role && document.getElementById('department').value;
+        setText('previewStatus', hasCore ? 'Live Preview' : 'Fill form to preview');
+      }
+      ['firstName', 'lastName', 'email', 'phone', 'gender', 'regNo', 'degree', 'college', 'department', 'role', 'startDate', 'endDate', 'stipend', 'status', 'managerName', 'managerTitle', 'managerEmail', 'issueDate'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.addEventListener('input', updatePreview); el.addEventListener('change', updatePreview); } });
+      var REQUIRED = ['firstName', 'lastName', 'email', 'college', 'department', 'role', 'startDate', 'endDate', 'managerName'];
+      function validate() { var ok = true; REQUIRED.forEach(function (id) { var el = document.getElementById(id); if (!el || !el.value.trim()) { if (el) el.classList.add('error'); ok = false; } else el.classList.remove('error'); }); return ok; }
+      document.getElementById('btnPreview').addEventListener('click', function () { updatePreview(); showToast('Preview updated!', 'success'); });
+      document.getElementById('btnSave').addEventListener('click', function () { if (!validate()) { showToast('Please fill all required fields.', 'warn'); return; } updatePreview(); showToast('Offer letter generated successfully!', 'success'); });
+      document.getElementById('btnReset').addEventListener('click', function () { ['firstName', 'lastName', 'email', 'phone', 'regNo', 'degree', 'college', 'role', 'stipend'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); } });['gender', 'department'].forEach(function (id) { var el = document.getElementById(id); if (el) { el.selectedIndex = 0; el.classList.remove('error'); } }); document.getElementById('status').value = 'active'; document.getElementById('managerName').value = 'Mr. S. Gokul Krish'; document.getElementById('managerTitle').value = 'Founder & CEO'; document.getElementById('managerEmail').value = 'gokulkrish@thinkinfoexpertsolutions.com'; document.getElementById('startDate').value = ''; document.getElementById('endDate').value = ''; document.getElementById('issueDate').value = ''; avatarDataUrl = null; document.getElementById('avatarPreview').innerHTML = '?'; document.getElementById('avatarInput').value = ''; updatePreview(); showToast('Form cleared.', 'warn'); });
+      var PCSS = ['*{box-sizing:border-box;margin:0;padding:0}', 'body{background:#d8d8d8;padding:12px;font-family:Arial,sans-serif}', '.ol-page{background:#fff;overflow:hidden}', '.ol-hdr{display:flex;min-height:105px}', '.ol-hdr-logo{width:135px;flex-shrink:0;background:#2e1c6e;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 8px;gap:6px}', '.ol-hdr-logo-circle{width:56px;height:56px;border-radius:50%;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden}', '.ol-hdr-logo-circle svg{width:34px;height:34px}', '.ol-hdr-brand{text-align:center;line-height:1.25}', '.ol-hdr-brand-top{color:#e8650a;font-size:.7rem;font-weight:900;display:block}', '.ol-hdr-brand-bot{color:#fff;font-size:.7rem;font-weight:900;display:block}', '.cert-co-hdr{padding:14px 20px 10px;border-bottom:1px solid #ddd;text-align:center;flex:1}', '.cert-co-name{font-size:1rem;font-weight:900;color:#1a1848}', '.cert-co-sub{font-size:.62rem;color:#444;margin-top:2px}', '.cert-co-addr{font-size:.6rem;color:#333;margin-top:2px}', '.cert-co-ids{font-size:.58rem;font-weight:700;color:#222;margin-top:3px}', '.cert-co-tel{font-size:.58rem;color:#333;margin-top:1px}', '.ol-hdr-bar{width:20px;background:#e8650a;flex-shrink:0}', '.ol-body{padding:16px 22px 20px;font-size:.8rem;color:#1a1a1a;line-height:1.8}', '.ol-date-line{text-align:right;font-weight:700;font-size:.82rem;margin-bottom:16px}', '.ol-to{margin-bottom:18px;line-height:1.7}', '.ol-to-label{font-weight:700;font-size:.82rem;margin-bottom:2px}', '.ol-greeting{font-weight:700;font-size:.82rem;margin-bottom:12px}', '.ol-para{margin-bottom:12px;text-align:justify}', '.ol-regards{margin-top:20px}', '.ol-regards-label{font-weight:700;font-size:.82rem;margin-bottom:4px}', '.ol-regards-name{font-weight:700;font-size:.82rem}', '.ol-regards-link{font-size:.76rem;color:#1155cc}', '.ol-footer{display:flex;height:14px}', '.ol-footer-purple{flex:1;background:#2e1c6e}.ol-footer-orange{width:60px;background:#e8650a}', '@media print{body{padding:0;background:#fff}}'].join('');
+      document.getElementById('btnPrint').addEventListener('click', function () { if (!validate()) { showToast('Please fill required fields.', 'warn'); return; } var w = window.open('', '_blank', 'width=870,height=900'); w.document.write('<!DOCTYPE html><html><head><title>Intern Offer Letter</title><style>' + PCSS + '</style></head><body>' + document.getElementById('olPageDoc').outerHTML + '</body></html>'); w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 600); showToast('Opening print dialog…', 'success'); });
+      document.getElementById('btnDownload').addEventListener('click', function () { if (!validate()) { showToast('Please fill required fields first.', 'warn'); return; } showToast('Use Print → Save as PDF to download.', 'warn'); document.getElementById('btnPrint').click(); });
+      function showToast(msg, type) { var wrap = document.getElementById('toastWrap'); var t = document.createElement('div'); t.className = 'toast' + (type === 'warn' ? ' warn' : type === 'err' ? ' err' : ''); var icon = type === 'warn' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'; t.innerHTML = icon + msg; wrap.appendChild(t); setTimeout(function () { t.classList.add('out'); setTimeout(function () { t.remove(); }, 350); }, 3000); }
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function (e) { e.stopPropagation(); sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) { if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== menuToggle && !menuToggle.contains(e.target)) sidebar.classList.remove('open'); });
+      document.getElementById('issueDate').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('copyright-year').textContent = new Date().getFullYear();
+      updatePreview();
+    })();
+  </script>
+</body>
+
+</html>
