@@ -1,0 +1,2337 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Add Experience Letter — Manager Panel</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg-0: #020608;
+      --bg-1: #0a0f18;
+      --bg-2: #0f1620;
+      --bg-3: #141c2a;
+      --cyan: #0ef;
+      --cyan-dim: rgba(14, 239, 255, .25);
+      --cyan-glow: 0 0 12px rgba(14, 239, 255, .3);
+      --green: #00e676;
+      --green-dim: rgba(0, 230, 118, .2);
+      --green-glow: 0 0 12px rgba(0, 230, 118, .25);
+      --red: #ff3a4a;
+      --red-dim: rgba(255, 58, 74, .25);
+      --red-glow: 0 0 12px rgba(255, 58, 74, .3);
+      --amber: #ffaa00;
+      --amber-dim: rgba(255, 170, 0, .25);
+      --amber-glow: 0 0 12px rgba(255, 170, 0, .3);
+      --purple: #b47fff;
+      --purple-dim: rgba(180, 127, 255, .25);
+      --purple-glow: 0 0 12px rgba(180, 127, 255, .3);
+      --text: #b8d4e8;
+      --text-dim: #4e6a7d;
+      --border: rgba(14, 239, 255, .12);
+      --radius: 10px;
+      --sidebar-w: 220px
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text);
+      display: flex;
+      position: relative
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0, transparent 3px, rgba(0, 0, 0, .07) 3px, rgba(0, 0, 0, .07) 4px);
+      pointer-events: none;
+      z-index: 999
+    }
+
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: .45
+    }
+
+    /* ══ SIDEBAR ══ */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 20;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border)
+    }
+
+    .logo-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 12px var(--cyan-dim)
+    }
+
+    .logo-icon {
+      width: 24px;
+      height: 24px;
+      color: #000
+    }
+
+    .sidebar-title {
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      background: rgba(14, 239, 255, .04);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--amber), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .92rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      box-shadow: 0 0 10px var(--amber-dim)
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .user-name {
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .user-role {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .nav {
+      padding: 8px 0
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: .82rem;
+      border-left: 3px solid transparent;
+      transition: background .2s, color .2s, border-color .2s;
+      position: relative
+    }
+
+    .nav-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0
+    }
+
+    .nav-link:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .nav-link.active {
+      background: rgba(14, 239, 255, .12);
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      box-shadow: inset 0 0 16px rgba(14, 239, 255, .08)
+    }
+
+    .nav-badge {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--amber);
+      color: #000;
+      font-size: .6rem;
+      font-weight: 800;
+      border-radius: 8px;
+      padding: 2px 6px;
+      animation: navPulse 2s infinite
+    }
+
+    @keyframes navPulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .5
+      }
+    }
+
+    /* ══ MAIN ══ */
+    .main-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 10;
+      overflow: hidden
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 24px;
+      flex-shrink: 0;
+      background: rgba(10, 15, 24, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 16px rgba(0, 0, 0, .4)
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .menu-toggle {
+      display: none;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+      align-items: center;
+      justify-content: center
+    }
+
+    .menu-toggle:hover {
+      background: rgba(14, 239, 255, .08);
+      border-color: var(--cyan-dim)
+    }
+
+    .menu-toggle svg {
+      width: 18px;
+      height: 18px
+    }
+
+    .page-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: .5px
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .76rem
+    }
+
+    .breadcrumb-link {
+      color: var(--cyan);
+      text-decoration: none;
+      transition: opacity .2s
+    }
+
+    .breadcrumb-link:hover {
+      opacity: .7
+    }
+
+    .breadcrumb-sep,
+    .breadcrumb-current {
+      color: var(--text-dim)
+    }
+
+    .content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .content::-webkit-scrollbar {
+      width: 6px
+    }
+
+    .content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    /* ══ TWO-COLUMN LAYOUT ══ */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start
+    }
+
+    /* ══ PANEL ══ */
+    .panel {
+      background: rgba(10, 15, 24, .88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(14, 239, 255, .07);
+      overflow: hidden;
+      transition: border-color .3s, box-shadow .3s
+    }
+
+    .panel:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 4px 32px rgba(14, 239, 255, .12), inset 0 1px 0 rgba(14, 239, 255, .1)
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      background: rgba(15, 22, 32, .75);
+      border-bottom: 1px solid var(--border)
+    }
+
+    .panel-title {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .panel-title svg {
+      width: 15px;
+      height: 15px;
+      filter: drop-shadow(0 0 5px var(--cyan))
+    }
+
+    .panel-badge {
+      font-size: .68rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(14, 239, 255, .1);
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+      letter-spacing: .3px
+    }
+
+    .panel-body {
+      padding: 20px
+    }
+
+    /* ══ FORM ══ */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .form-group.full {
+      grid-column: 1/-1
+    }
+
+    .form-label {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: .6px;
+      text-transform: uppercase
+    }
+
+    .req {
+      color: var(--red);
+      margin-left: 2px
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 13px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      width: 100%
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07);
+      background: rgba(14, 239, 255, .05)
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+      color: var(--text-dim)
+    }
+
+    .form-input.error,
+    .form-select.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px rgba(255, 58, 74, .08)
+    }
+
+    .form-select option {
+      background: var(--bg-2)
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(.6) hue-rotate(180deg) brightness(1.2);
+      cursor: pointer
+    }
+
+    .form-divider {
+      grid-column: 1/-1;
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0
+    }
+
+    .form-section-label {
+      grid-column: 1/-1;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    /* ══ BUTTONS ══ */
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 7px;
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .4px;
+      transition: background .2s, border-color .2s, box-shadow .2s, transform .15s;
+      border: 1px solid transparent
+    }
+
+    .btn:active {
+      transform: scale(.97)
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .2), rgba(14, 239, 255, .1));
+      border-color: var(--cyan-dim);
+      color: var(--cyan)
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, rgba(14, 239, 255, .32), rgba(14, 239, 255, .18));
+      border-color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .2), rgba(0, 230, 118, .1));
+      border-color: var(--green-dim);
+      color: var(--green)
+    }
+
+    .btn-success:hover {
+      background: linear-gradient(135deg, rgba(0, 230, 118, .32), rgba(0, 230, 118, .18));
+      border-color: var(--green);
+      box-shadow: var(--green-glow)
+    }
+
+    .btn-danger {
+      background: none;
+      border-color: var(--border);
+      color: var(--text-dim)
+    }
+
+    .btn-danger:hover {
+      background: rgba(255, 58, 74, .1);
+      border-color: var(--red-dim);
+      color: var(--red)
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, rgba(180, 127, 255, .22), rgba(180, 127, 255, .1));
+      border-color: var(--purple-dim);
+      color: var(--purple)
+    }
+
+    .btn-send:hover {
+      background: linear-gradient(135deg, rgba(180, 127, 255, .35), rgba(180, 127, 255, .2));
+      border-color: var(--purple);
+      box-shadow: var(--purple-glow)
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px
+    }
+
+    /* ══ LETTER PREVIEW ══ */
+    .preview-outer {
+      position: relative
+    }
+
+    .letter-preview {
+      background: #fff;
+      border-radius: 8px;
+      padding: 38px 42px;
+      color: #1a1a2e;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: .87rem;
+      line-height: 1.75;
+      min-height: 580px;
+      box-shadow: 0 0 40px rgba(14, 239, 255, .12), 0 0 0 1px rgba(14, 239, 255, .2);
+      position: relative;
+      overflow: hidden;
+      transition: box-shadow .3s
+    }
+
+    .letter-preview:hover {
+      box-shadow: 0 0 60px rgba(14, 239, 255, .18), 0 0 0 1px rgba(14, 239, 255, .35)
+    }
+
+    .letter-preview::before {
+      content: 'EXPERIENCE LETTER';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-35deg);
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: rgba(14, 239, 255, .05);
+      pointer-events: none;
+      white-space: nowrap
+    }
+
+    /* letter internals */
+    .lp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 2px solid #0ef
+    }
+
+    .lp-company-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0a0f18;
+      letter-spacing: .5px;
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    .lp-company-sub {
+      font-size: .73rem;
+      color: #5a7080;
+      margin-top: 2px;
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    .lp-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0ef, #00e676);
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .lp-logo svg {
+      width: 28px;
+      height: 28px;
+      color: #000
+    }
+
+    .lp-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      font-size: .78rem;
+      font-family: 'Segoe UI', sans-serif;
+      color: #3a5060
+    }
+
+    .lp-meta span {
+      font-weight: 600;
+      color: #0a0f18
+    }
+
+    .lp-title {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0a0f18;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(14, 239, 255, .3);
+      border-bottom: 1px solid rgba(14, 239, 255, .3);
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    .lp-body {
+      font-size: .83rem;
+      color: #2a3a4a;
+      line-height: 1.8
+    }
+
+    .lp-body p {
+      margin-bottom: 13px
+    }
+
+    .lp-body strong {
+      color: #0a0f18
+    }
+
+    .lp-info-table {
+      width: 100%;
+      margin: 14px 0;
+      border-collapse: collapse;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: .78rem
+    }
+
+    .lp-info-table td {
+      padding: 6px 10px;
+      border: 1px solid rgba(14, 239, 255, .2)
+    }
+
+    .lp-info-table td:first-child {
+      background: rgba(14, 239, 255, .05);
+      color: #3a5060;
+      font-weight: 600;
+      width: 42%
+    }
+
+    .lp-info-table td:last-child {
+      color: #0a0f18;
+      font-weight: 500
+    }
+
+    .lp-sign {
+      margin-top: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end
+    }
+
+    .lp-sign-block {
+      text-align: center
+    }
+
+    .lp-sign-line {
+      width: 130px;
+      height: 1px;
+      background: #0a0f18;
+      margin-bottom: 6px
+    }
+
+    .lp-sign-name {
+      font-size: .76rem;
+      font-weight: 700;
+      color: #0a0f18;
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    .lp-sign-role {
+      font-size: .68rem;
+      color: #5a7080;
+      font-family: 'Segoe UI', sans-serif
+    }
+
+    .lp-stamp {
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(14, 239, 255, .5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: .5rem;
+      color: rgba(14, 239, 255, .6);
+      letter-spacing: 1px;
+      text-align: center;
+      font-family: 'Segoe UI', sans-serif;
+      background: rgba(14, 239, 255, .03);
+      margin: 0 auto
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px
+    }
+
+    /* ══ FOOTER ══ */
+    .footer {
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-top: 1px solid var(--border);
+      font-size: .7rem;
+      color: var(--text-dim);
+      background: rgba(10, 15, 24, .6)
+    }
+
+    /* ══ TOAST ══ */
+    .toast-wrap {
+      position: fixed;
+      bottom: 60px;
+      right: 24px;
+      z-index: 600;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      background: rgba(10, 15, 24, .96);
+      border: 1px solid var(--green-dim);
+      color: var(--green);
+      font-size: .8rem;
+      font-weight: 600;
+      box-shadow: var(--green-glow), 0 8px 24px rgba(0, 0, 0, .5);
+      animation: toastIn .3s ease forwards;
+      max-width: 300px
+    }
+
+    .toast svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0
+    }
+
+    .toast.warn {
+      border-color: var(--amber-dim);
+      color: var(--amber);
+      box-shadow: var(--amber-glow), 0 8px 24px rgba(0, 0, 0, .5)
+    }
+
+    .toast.err {
+      border-color: var(--red-dim);
+      color: var(--red);
+      box-shadow: var(--red-glow), 0 8px 24px rgba(0, 0, 0, .5)
+    }
+
+    .toast.out {
+      animation: toastOut .35s ease forwards
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0)
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(30px)
+      }
+    }
+
+    /* ══ SEND MODAL ══ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 8, .85);
+      backdrop-filter: blur(7px);
+      z-index: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .modal {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 0 60px rgba(14, 239, 255, .14), 0 24px 60px rgba(0, 0, 0, .75);
+      width: min(620px, 96vw);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(22px) scale(.97);
+      transition: transform .25s;
+      overflow: hidden
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0) scale(1)
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 22, 32, .85);
+      flex-shrink: 0
+    }
+
+    .modal-head-title {
+      font-size: .92rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 9px
+    }
+
+    .modal-head-title svg {
+      width: 17px;
+      height: 17px;
+      color: var(--purple);
+      filter: drop-shadow(0 0 5px var(--purple))
+    }
+
+    .modal-close {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .2s, color .2s, border-color .2s
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 58, 74, .12);
+      border-color: var(--red-dim);
+      color: var(--red)
+    }
+
+    .modal-close svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .modal-body {
+      padding: 22px;
+      overflow-y: auto;
+      flex: 1;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 5px
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px
+    }
+
+    .modal-foot {
+      padding: 14px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 22, 32, .65);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-shrink: 0
+    }
+
+    /* recipient type tabs */
+    .recip-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px
+    }
+
+    .recip-tab {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-dim);
+      font-size: .8rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .3px;
+      transition: background .2s, border-color .2s, color .2s, box-shadow .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px
+    }
+
+    .recip-tab svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .recip-tab:hover {
+      background: rgba(14, 239, 255, .06);
+      color: var(--text)
+    }
+
+    .recip-tab.active.emp {
+      background: rgba(14, 239, 255, .12);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: var(--cyan-glow)
+    }
+
+    .recip-tab.active.intern {
+      background: rgba(180, 127, 255, .12);
+      border-color: var(--purple-dim);
+      color: var(--purple);
+      box-shadow: var(--purple-glow)
+    }
+
+    /* search + list */
+    .recip-search-wrap {
+      position: relative;
+      margin-bottom: 10px
+    }
+
+    .recip-search-wrap svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--text-dim);
+      pointer-events: none
+    }
+
+    .recip-search {
+      width: 100%;
+      padding: 9px 13px 9px 34px;
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .recip-search:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07)
+    }
+
+    .recip-search::placeholder {
+      color: var(--text-dim)
+    }
+
+    .recip-list {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      max-height: 190px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      margin-bottom: 16px
+    }
+
+    .recip-list::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .recip-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px
+    }
+
+    .recip-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: background .15s;
+      border-bottom: 1px solid rgba(14, 239, 255, .05)
+    }
+
+    .recip-item:last-child {
+      border-bottom: none
+    }
+
+    .recip-item:hover {
+      background: rgba(14, 239, 255, .05)
+    }
+
+    .recip-item.selected {
+      background: rgba(14, 239, 255, .09)
+    }
+
+    .recip-item.selected .recip-check {
+      opacity: 1
+    }
+
+    .recip-av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0
+    }
+
+    .recip-av.emp-av {
+      background: linear-gradient(135deg, var(--cyan), var(--green))
+    }
+
+    .recip-av.intern-av {
+      background: linear-gradient(135deg, var(--purple), var(--amber))
+    }
+
+    .recip-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .recip-name {
+      font-size: .82rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .recip-meta {
+      font-size: .68rem;
+      color: var(--text-dim);
+      margin-top: 1px
+    }
+
+    .recip-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity .2s
+    }
+
+    .recip-check svg {
+      width: 10px;
+      height: 10px;
+      color: #000
+    }
+
+    .recip-empty {
+      padding: 20px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: .8rem
+    }
+
+    /* selected chips */
+    .selected-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 30px;
+      margin-bottom: 16px
+    }
+
+    .selected-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(14, 239, 255, .1);
+      border: 1px solid var(--cyan-dim);
+      color: var(--cyan);
+      font-size: .74rem;
+      font-weight: 600
+    }
+
+    .selected-chip.intern-chip {
+      background: rgba(180, 127, 255, .1);
+      border-color: var(--purple-dim);
+      color: var(--purple)
+    }
+
+    .chip-remove {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      color: inherit;
+      transition: background .15s
+    }
+
+    .chip-remove:hover {
+      background: rgba(255, 58, 74, .3)
+    }
+
+    .chip-remove svg {
+      width: 8px;
+      height: 8px
+    }
+
+    /* compose */
+    .compose-label {
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block
+    }
+
+    .compose-subject {
+      width: 100%;
+      padding: 9px 13px;
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 12px
+    }
+
+    .compose-subject:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07)
+    }
+
+    .compose-subject::placeholder {
+      color: var(--text-dim)
+    }
+
+    .compose-body {
+      width: 100%;
+      min-height: 130px;
+      padding: 11px 13px;
+      background: rgba(14, 239, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: .82rem;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      line-height: 1.6;
+      transition: border-color .2s, box-shadow .2s
+    }
+
+    .compose-body:focus {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 0 3px rgba(14, 239, 255, .07)
+    }
+
+    .compose-body::placeholder {
+      color: var(--text-dim)
+    }
+
+    .attach-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 9px 13px;
+      border-radius: 7px;
+      background: rgba(0, 230, 118, .05);
+      border: 1px solid var(--green-dim);
+      font-size: .76rem;
+      color: var(--green)
+    }
+
+    .attach-note svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
+
+    /* success view */
+    .send-success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      gap: 14px
+    }
+
+    .send-success.show {
+      display: flex
+    }
+
+    .send-success-icon {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(0, 230, 118, .12);
+      border: 2px solid var(--green-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: popIn .4s cubic-bezier(.17, .67, .3, 1.3)
+    }
+
+    .send-success-icon svg {
+      width: 34px;
+      height: 34px;
+      color: var(--green)
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(.4);
+        opacity: 0
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+
+    .send-success h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff
+    }
+
+    .send-success p {
+      font-size: .82rem;
+      color: var(--text-dim);
+      max-width: 340px
+    }
+
+    .send-recipients-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 4px
+    }
+
+    /* ══ RESPONSIVE ══ */
+    @media(max-width:1050px) {
+      .layout {
+        grid-template-columns: 1fr
+      }
+    }
+
+    @media(max-width:900px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform .3s;
+        z-index: 100
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 24px rgba(0, 0, 0, .6)
+      }
+
+      .menu-toggle {
+        display: flex
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .form-group.full {
+        grid-column: 1
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img
+        src="data:image/png;base64,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"
+        alt="TES Logo" width="40" height="40" style="display:block;border-radius:6px;" />
+      <span class="sidebar-title">Manager Panel</span>
+    </div>
+    <div class="user-card">
+      <div class="user-avatar">P</div>
+      <div class="user-info">
+        <div class="user-name">Priya Sharma</div>
+        <div class="user-role">IT Manager</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="manager-home.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        <span>Home</span>
+      </a>
+      <a href="manager-profile-edit.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        <span>View/Edit Profile</span>
+      </a>
+      <a href="manager-add-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="16" />
+          <line x1="8" y1="12" x2="16" y2="12" />
+        </svg>
+        <span>Add Salary</span>
+      </a>
+      <a href="manager-edit-salary.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+        <span>Edit Salary</span>
+      </a>
+      <a href="manager-take-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+          <polyline points="9 14 11 16 15 12" />
+        </svg>
+        <span>Take Attendance</span>
+      </a>
+      <a href="manager-view-attendance.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>View/Update Attendance</span>
+      </a>
+      <a href="attendance-approval.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>Attendance Approvals</span><span class="nav-badge">3</span>
+      </a>
+      <a href="manager-notifications.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>View Notifications</span><span class="nav-badge" id="navNotifBadge">3</span>
+      </a>
+      <a href="manager-apply-leave.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M9 8h6m-6 4h6m-6 4h4" />
+        </svg>
+        <span>Apply For Leave</span>
+      </a>
+      <a href="manager-offer-letter.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        <span>Add Offer Letter</span>
+      </a>
+      <a href="manager-experience-letter.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+        </svg>
+        <span>Add Experience Letter</span>
+      </a>
+      <a href="manager-intern-offer-letter.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="12" y1="17" x2="8" y2="17" />
+        </svg><span>Intern Offer Letter</span></a>
+      <a href="manager-intern-certificate.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="6" />
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+        </svg><span>Intern Certificate</span></a>
+      <a href="manager-add-employee.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <line x1="19" y1="8" x2="19" y2="14" />
+          <line x1="22" y1="11" x2="16" y2="11" />
+        </svg>
+        <span>Add New Employee</span>
+      </a>
+      <a href="manager-feedback.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>Feedback</span>
+      </a>
+      <a href="manager-add-intern.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg><span>Add Intern</span></a>
+      <a href="manager-manage-interns.html" class="nav-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Manage Interns</span></a>
+      <a href="javascript:void(0);" onclick="ThinkAPI.logout()" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main-wrap">
+    <header class="header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <h1 class="page-title">Add Experience Letter</h1>
+      </div>
+      <div class="breadcrumb">
+        <a href="manager-home.html" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-sep">/</span>
+        <span class="breadcrumb-current">Add Experience Letter</span>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="layout">
+
+        <!-- ══ FORM PANEL ══ -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="12" y1="18" x2="12" y2="12" />
+                <line x1="9" y1="15" x2="15" y2="15" />
+              </svg>
+              Experience Letter Details
+            </div>
+            <span class="panel-badge">New Letter</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-grid">
+
+              <div class="form-section-label">Employee Information</div>
+
+              <div class="form-group">
+                <label class="form-label">Employee Name <span class="req">*</span></label>
+                <input type="text" id="empName" class="form-input" placeholder="e.g. Arjun Mehta" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Employee ID <span class="req">*</span></label>
+                <input type="text" id="empId" class="form-input" placeholder="e.g. EMP-0042" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Designation <span class="req">*</span></label>
+                <input type="text" id="designation" class="form-input" placeholder="e.g. Senior Developer" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department <span class="req">*</span></label>
+                <select id="department" class="form-select">
+                  <option value="">— Select —</option>
+                  <option>IT</option>
+                  <option>HR</option>
+                  <option>Sales</option>
+                  <option>Frontend</option>
+                  <option>Operations</option>
+                  <option>Finance</option>
+                  <option>Micro Biology</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date of Joining <span class="req">*</span></label>
+                <input type="date" id="joinDate" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Last Working Date <span class="req">*</span></label>
+                <input type="date" id="leaveDate" class="form-input" />
+              </div>
+
+              <div class="form-divider"></div>
+              <div class="form-section-label">Letter Details</div>
+
+              <div class="form-group">
+                <label class="form-label">Letter Date <span class="req">*</span></label>
+                <input type="date" id="letterDate" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reference No.</label>
+                <input type="text" id="refNo" class="form-input" placeholder="Auto-generated if blank" />
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label">Performance / Conduct</label>
+                <select id="conduct" class="form-select">
+                  <option value="excellent">Excellent — consistently exceeded expectations</option>
+                  <option value="good" selected>Good — met all performance targets</option>
+                  <option value="satisfactory">Satisfactory — fulfilled responsibilities</option>
+                </select>
+              </div>
+
+              <div class="form-group full">
+                <label class="form-label">Additional Remarks (optional)</label>
+                <textarea id="remarks" class="form-textarea"
+                  placeholder="Any specific achievements, skills, or notes to highlight…"></textarea>
+              </div>
+
+              <div class="form-divider"></div>
+              <div class="form-section-label">Authorised By</div>
+
+              <div class="form-group">
+                <label class="form-label">Manager Name <span class="req">*</span></label>
+                <input type="text" id="managerName" class="form-input" placeholder="Signing authority"
+                  value="Mr. S. Gokul Krish" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Manager Title</label>
+                <input type="text" id="managerTitle" class="form-input" placeholder="e.g. IT Manager"
+                  value="Founder &amp; CEO" />
+              </div>
+
+            </div><!-- /form-grid -->
+
+            <div class="form-actions">
+              <button class="btn btn-danger" id="btnReset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 .49-3.51" />
+                </svg>
+                Reset
+              </button>
+              <button class="btn btn-primary" id="btnPreview">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Preview
+              </button>
+              <button class="btn btn-success" id="btnSave">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Save Letter
+              </button>
+              <button class="btn btn-send" id="btnSend">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+                Send
+              </button>
+            </div>
+          </div>
+        </div><!-- /form panel -->
+
+        <!-- ══ PREVIEW PANEL ══ -->
+        <div class="preview-outer">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Live Preview
+              </div>
+              <span class="panel-badge" id="previewStatus">Fill form to preview</span>
+            </div>
+            <div class="panel-body" style="padding:16px">
+
+              <!-- THE LETTER -->
+              <div class="letter-preview" id="letterPreview">
+
+                <div class="lp-header">
+                  <div>
+                    <div class="lp-company-name">Thinkinfo Expert Solutions</div>
+                    <div class="lp-company-sub">A Cyber Security Product and Consulting Services Company</div>
+                    <div class="lp-company-sub" style="margin-top:3px;">📍 275, Kalarkadu, Thiruvagoundanoor,
+                      Suramangalam, Salem-636005</div>
+                    <div class="lp-company-sub" style="margin-top:2px;">📞 +91 93428 77730 &nbsp;|&nbsp; 🌐
+                      www.thinkinfoexpertsolutions.com</div>
+                    <div class="lp-company-sub" style="margin-top:2px;">✉ gokulkrish@thinkinfoexpertsolutions.com</div>
+                  </div>
+                  <div class="lp-logo"><img
+                      src="data:image/png;base64,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"
+                      alt="TES Logo" style="width:44px;height:44px;object-fit:contain;border-radius:8px;" /></div>
+                </div>
+
+                <div class="lp-meta">
+                  <div>Ref: <span id="lp-ref">EXP/IT/—</span></div>
+                  <div>Date: <span id="lp-date">—</span></div>
+                </div>
+
+                <div class="lp-title">Experience Certificate</div>
+
+                <div class="lp-body">
+                  <p>To Whomsoever It May Concern,</p>
+                  <p>
+                    This is to certify that <strong id="lp-name">[ Employee Name ]</strong> bearing
+                    Employee ID <strong id="lp-id">[ ID ]</strong> was employed with
+                    <strong>Thinkinfo Expert Solutions</strong> as a
+                    <strong id="lp-role">[ Designation ]</strong> in the
+                    <strong id="lp-dept">[ Department ]</strong> Department.
+                  </p>
+
+                  <table class="lp-info-table">
+                    <tr>
+                      <td>Full Name</td>
+                      <td id="lp-tName">—</td>
+                    </tr>
+                    <tr>
+                      <td>Employee ID</td>
+                      <td id="lp-tId">—</td>
+                    </tr>
+                    <tr>
+                      <td>Designation</td>
+                      <td id="lp-tRole">—</td>
+                    </tr>
+                    <tr>
+                      <td>Department</td>
+                      <td id="lp-tDept">—</td>
+                    </tr>
+                    <tr>
+                      <td>Date of Joining</td>
+                      <td id="lp-tJoin">—</td>
+                    </tr>
+                    <tr>
+                      <td>Last Working Date</td>
+                      <td id="lp-tLeave">—</td>
+                    </tr>
+                  </table>
+
+                  <p id="lp-conductPara">
+                    During the tenure, <strong id="lp-nameInline">[ Name ]</strong>
+                    demonstrated good performance and met all assigned targets and responsibilities.
+                  </p>
+
+                  <p id="lp-remarksPara" style="display:none">
+                    <strong>Additional Remarks:</strong> <span id="lp-remarksText"></span>
+                  </p>
+
+                  <p>We wish <strong id="lp-nameWish">[ Name ]</strong> all the best in future endeavours.</p>
+                </div>
+
+                <div class="lp-sign">
+                  <div class="lp-sign-block">
+                    <div class="lp-sign-line"></div>
+                    <div class="lp-sign-name" id="lp-managerName">Mr. S. Gokul Krish</div>
+                    <div class="lp-sign-role" id="lp-managerTitle">Founder &amp; CEO</div>
+                    <div class="lp-sign-role">Thinkinfo Expert Solutions</div>
+                  </div>
+                  <div class="lp-stamp">
+                    <div style="font-size:.6rem;font-weight:700;letter-spacing:1px">OFFICIAL</div>
+                    <div style="font-size:.55rem;margin-top:2px">STAMP</div>
+                  </div>
+                  <div class="lp-sign-block" style="text-align:right">
+                    <div class="lp-sign-line" style="margin-left:auto"></div>
+                    <div class="lp-sign-name">HR Department</div>
+                    <div class="lp-sign-role">Thinkinfo Expert Solutions</div>
+                  </div>
+                </div>
+
+                <!-- Company footer strip -->
+                <div
+                  style="margin-top:18px;padding-top:10px;border-top:1.5px solid #0ef;font-size:.65rem;color:#5a7080;font-family:'Segoe UI',sans-serif;text-align:center;line-height:1.6;">
+                  <strong style="color:#0a0f18;">UDYAM NO:</strong> UDYAM-TN-20-0032126 &nbsp;|&nbsp;
+                  <strong style="color:#0a0f18;">GST NO:</strong> 33BTUPG8040C1ZS &nbsp;|&nbsp;
+                  Tel: +91 93428 77730 &nbsp;|&nbsp; www.thinkinfoexpertsolutions.com<br />
+                  275, Kalarkadu, Thiruvagoundanoor, Suramangalam, Salem-636005
+                </div>
+
+              </div><!-- /letter-preview -->
+
+              <div class="preview-actions">
+                <button class="btn btn-primary" id="btnPrint">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print
+                </button>
+              </div>
+            </div>
+          </div>
+        </div><!-- /preview -->
+
+      </div><!-- /layout -->
+    </main>
+
+    <footer class="footer">
+      <span>Copyright &copy; <span id="copyright-year"></span> <strong
+          style="color:#0ef;text-shadow:0 0 10px rgba(14,239,255,0.9),0 0 20px rgba(14,239,255,0.6),0 0 30px rgba(14,239,255,0.3);letter-spacing:0.5px;font-weight:bold;">Thinkinfo
+          Expert Solutions.</strong> All rights reserved.</span>
+      <span>Version 1.0</span>
+    </footer>
+  </div><!-- /main-wrap -->
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <!-- ══ SEND MODAL ══ -->
+  <div class="modal-overlay" id="sendModal" onclick="if(event.target===this)closeSendModal()">
+    <div class="modal">
+
+      <div class="modal-head">
+        <div class="modal-head-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+          Send Experience Letter
+        </div>
+        <button class="modal-close" onclick="closeSendModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- COMPOSE VIEW -->
+      <div id="composeView">
+        <div class="modal-body">
+
+          <!-- Tabs -->
+          <div class="recip-tabs">
+            <button class="recip-tab active emp" id="tabEmp" onclick="switchTab('emp')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Employee
+            </button>
+            <button class="recip-tab intern" id="tabIntern" onclick="switchTab('intern')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+              </svg>
+              Intern
+            </button>
+          </div>
+
+          <!-- Search -->
+          <div class="recip-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" class="recip-search" id="recipSearch" placeholder="Search by name, department or email…"
+              oninput="filterRecipients()" />
+          </div>
+
+          <!-- List -->
+          <div class="recip-list" id="recipList"></div>
+
+          <!-- Selected chips -->
+          <div class="selected-strip" id="selectedStrip"></div>
+
+          <!-- Compose -->
+          <label class="compose-label">Subject</label>
+          <input type="text" class="compose-subject" id="composeSubject"
+            placeholder="e.g. Experience Certificate — Thinkinfo Expert Solutions" />
+
+          <label class="compose-label">Message</label>
+          <textarea class="compose-body" id="composeBody"
+            placeholder="Type your message to the recipient(s)…"></textarea>
+
+          <div class="attach-note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+            The current experience letter preview will be attached automatically as a PDF.
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-danger" onclick="closeSendModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            Cancel
+          </button>
+          <button class="btn btn-send" id="btnModalSend" onclick="doSend()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+            Send Now
+          </button>
+        </div>
+      </div>
+
+      <!-- SUCCESS VIEW -->
+      <div id="successView" style="display:none">
+        <div class="modal-body">
+          <div class="send-success show">
+            <div class="send-success-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3>Experience Letter Sent!</h3>
+            <p id="sendSuccessMsg">Your experience letter has been sent successfully.</p>
+            <div class="send-recipients-list" id="sendRecipChips"></div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-primary" onclick="closeSendModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Done
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ══ MATRIX RAIN ══ */
+      (function () {
+        var c = document.getElementById('matrixCanvas'), ctx = c.getContext('2d'), W, H, cols, drops,
+          CH = 'アイウエオタチツテト01234ABCDEFabcdef<>{}[]|/\\';
+        function resize() { W = c.width = innerWidth; H = c.height = innerHeight; cols = Math.floor(W / 18); drops = new Array(cols).fill(1); }
+        resize(); addEventListener('resize', resize);
+        ctx.fillStyle = 'rgb(2,6,8)'; ctx.fillRect(0, 0, W, H);
+        (function loop() {
+          ctx.fillStyle = 'rgba(2,6,8,0.06)'; ctx.fillRect(0, 0, W, H);
+          ctx.font = '14px "Courier New"';
+          for (var i = 0; i < drops.length; i++) {
+            var x = i * 18, y = drops[i] * 18, ch = CH[Math.floor(Math.random() * CH.length)];
+            ctx.fillStyle = 'rgba(14,239,255,0.6)'; ctx.fillText(ch, x, y);
+            ctx.fillStyle = 'rgba(14,239,255,0.2)'; ctx.fillText(CH[Math.floor(Math.random() * CH.length)], x, y - 18);
+            if (y > H && Math.random() > .975) drops[i] = 0; drops[i]++;
+          }
+          requestAnimationFrame(loop);
+        })();
+      })();
+
+      /* ══ HELPERS ══ */
+      var ML = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      function fmtLong(v) { if (!v) return '—'; var d = new Date(v + 'T00:00:00'); return d.getDate() + ' ' + ML[d.getMonth()] + ', ' + d.getFullYear(); }
+      function fmtShort(v) { if (!v) return '—'; var p = v.split('-'); return MS[parseInt(p[1]) - 1] + ' ' + parseInt(p[2]) + ', ' + p[0]; }
+
+      var _refCache = null;
+      function genRef() {
+        if (_refCache) return _refCache;
+        var dept = document.getElementById('department').value || 'XX';
+        var n = Math.floor(100 + Math.random() * 900);
+        _refCache = 'EXP/' + dept.substring(0, 2).toUpperCase() + '/' + new Date().getFullYear() + '/' + n;
+        return _refCache;
+      }
+
+      var conductPhrases = {
+        excellent: 'consistently exceeded performance expectations, demonstrated exceptional dedication, and was a highly valued team member',
+        good: 'demonstrated good performance, met all assigned targets and responsibilities, and maintained a professional attitude',
+        satisfactory: 'fulfilled all assigned responsibilities satisfactorily and maintained a professional demeanor throughout the employment'
+      };
+
+      /* ══ LIVE PREVIEW ══ */
+      function updatePreview() {
+        _refCache = null;
+        var name = document.getElementById('empName').value.trim() || '[ Employee Name ]';
+        var id = document.getElementById('empId').value.trim() || '[ ID ]';
+        var role = document.getElementById('designation').value.trim() || '[ Designation ]';
+        var dept = document.getElementById('department').value || '[ Department ]';
+        var join = document.getElementById('joinDate').value;
+        var leave = document.getElementById('leaveDate').value;
+        var lDate = document.getElementById('letterDate').value;
+        var custRef = document.getElementById('refNo').value.trim();
+        var conduct = document.getElementById('conduct').value;
+        var remarks = document.getElementById('remarks').value.trim();
+        var mName = document.getElementById('managerName').value.trim() || 'Priya Sharma';
+        var mTitle = document.getElementById('managerTitle').value.trim() || 'IT Manager';
+        var ref = custRef || genRef();
+
+        document.getElementById('lp-ref').textContent = ref;
+        document.getElementById('lp-date').textContent = fmtLong(lDate);
+        document.getElementById('lp-name').textContent = name;
+        document.getElementById('lp-id').textContent = id;
+        document.getElementById('lp-role').textContent = role;
+        document.getElementById('lp-dept').textContent = dept;
+        document.getElementById('lp-tName').textContent = name;
+        document.getElementById('lp-tId').textContent = id;
+        document.getElementById('lp-tRole').textContent = role;
+        document.getElementById('lp-tDept').textContent = dept;
+        document.getElementById('lp-tJoin').textContent = fmtLong(join);
+        document.getElementById('lp-tLeave').textContent = fmtLong(leave);
+        document.getElementById('lp-nameInline').textContent = name;
+        document.getElementById('lp-nameWish').textContent = name;
+        document.getElementById('lp-managerName').textContent = mName;
+        document.getElementById('lp-managerTitle').textContent = mTitle;
+
+        var phrase = conductPhrases[conduct] || conductPhrases.good;
+        document.getElementById('lp-conductPara').innerHTML =
+          'During the tenure, <strong>' + name + '</strong> ' + phrase + '.';
+
+        var rp = document.getElementById('lp-remarksPara');
+        if (remarks) { rp.style.display = 'block'; document.getElementById('lp-remarksText').textContent = remarks; }
+        else { rp.style.display = 'none'; }
+
+        var hasCore = document.getElementById('empName').value.trim() &&
+          document.getElementById('empId').value.trim() &&
+          document.getElementById('designation').value.trim() &&
+          document.getElementById('department').value;
+        document.getElementById('previewStatus').textContent = hasCore ? 'Live Preview' : 'Fill form to preview';
+      }
+
+      /* bind all fields */
+      ['empName', 'empId', 'designation', 'department', 'joinDate', 'leaveDate', 'letterDate', 'refNo', 'conduct', 'remarks', 'managerName', 'managerTitle']
+        .forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) { el.addEventListener('input', updatePreview); el.addEventListener('change', updatePreview); }
+        });
+
+      /* ══ VALIDATION ══ */
+      var REQUIRED = ['empName', 'empId', 'designation', 'department', 'joinDate', 'leaveDate', 'letterDate', 'managerName'];
+      function validate() {
+        var ok = true;
+        REQUIRED.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el.value.trim()) { el.classList.add('error'); ok = false; }
+          else el.classList.remove('error');
+        });
+        return ok;
+      }
+
+      /* ══ FORM BUTTONS ══ */
+      document.getElementById('btnPreview').addEventListener('click', function () {
+        updatePreview(); showToast('Preview updated!', 'info');
+      });
+
+      document.getElementById('btnSave').addEventListener('click', function () {
+        if (!validate()) { showToast('Please fill all required fields.', 'warn'); return; }
+        updatePreview(); showToast('Experience letter saved successfully!', 'success');
+      });
+
+      document.getElementById('btnReset').addEventListener('click', function () {
+        ['empName', 'empId', 'designation', 'joinDate', 'leaveDate', 'letterDate', 'refNo', 'remarks', 'managerName'].forEach(function (id) {
+          var el = document.getElementById(id); if (el) { el.value = ''; el.classList.remove('error'); }
+        });
+        document.getElementById('department').selectedIndex = 0;
+        document.getElementById('conduct').value = 'good';
+        document.getElementById('managerTitle').value = 'Founder & CEO';
+        document.getElementById('managerName').value = 'Mr. S. Gokul Krish';
+        document.getElementById('letterDate').value = new Date().toISOString().slice(0, 10);
+        _refCache = null;
+        REQUIRED.forEach(function (id) { var el = document.getElementById(id); if (el) el.classList.remove('error'); });
+        updatePreview(); showToast('Form cleared.', 'warn');
+      });
+
+      /* ══ PRINT ══ */
+      document.getElementById('btnPrint').addEventListener('click', function () {
+        if (!validate()) { showToast('Please fill required fields before printing.', 'warn'); return; }
+        var lp = document.getElementById('letterPreview');
+        var w = window.open('', '_blank', 'width=820,height=730');
+        w.document.write('<html><head><title>Experience Letter</title><style>'
+          + 'body{margin:0;padding:32px;font-family:Georgia,serif;background:#fff;color:#1a1a2e}'
+          + '.lp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #0ef}'
+          + '.lp-company-name{font-size:1.25rem;font-weight:700;font-family:sans-serif}'
+          + '.lp-company-sub{font-size:.68rem;color:#5a7080;font-family:sans-serif;margin-top:2px}'
+          + '.lp-logo{width:64px;height:64px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+          + '.lp-logo img{width:64px;height:64px;object-fit:contain;border-radius:8px}'
+          + '.lp-meta{display:flex;justify-content:space-between;margin-bottom:16px;font-size:.78rem;font-family:sans-serif;color:#3a5060}'
+          + '.lp-meta span{font-weight:600;color:#0a0f18}'
+          + '.lp-title{text-align:center;font-size:1.05rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;padding:8px 0;border-top:1px solid #cef;border-bottom:1px solid #cef;font-family:sans-serif;color:#0a0f18}'
+          + '.lp-body{font-size:.83rem;color:#2a3a4a;line-height:1.8}.lp-body p{margin-bottom:12px}.lp-body strong{color:#0a0f18}'
+          + 'table{width:100%;border-collapse:collapse;font-size:.78rem;font-family:sans-serif;margin:14px 0}'
+          + 'td{padding:6px 10px;border:1px solid #cde}td:first-child{background:#f0fdfe;color:#3a5060;font-weight:600;width:42%}'
+          + '.lp-sign{margin-top:32px;display:flex;justify-content:space-between;align-items:flex-end;font-family:sans-serif}'
+          + '.lp-sign-block{text-align:center}.lp-sign-line{width:130px;height:1px;background:#0a0f18;margin-bottom:6px}'
+          + '.lp-sign-name{font-size:.76rem;font-weight:700}.lp-sign-role{font-size:.68rem;color:#5a7080}'
+          + '.lp-stamp{width:64px;height:64px;border-radius:50%;border:2.5px solid rgba(14,239,255,.6);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:.5rem;color:rgba(14,239,255,.9);letter-spacing:1px;text-align:center;margin:0 auto}'
+          + '@media print{body{margin:0;padding:16px}}'
+          + '</style></head><body>');
+        w.document.write(lp.innerHTML);
+        w.document.write('  <script>/* Dynamic Copyright Year */(function(){var el=document.getElementById(\'copyright-year\');if(el)el.textContent=new Date().getFullYear();})();<\/script><\/body><\/html>');
+        w.document.close(); w.focus();
+        setTimeout(function () { w.print(); }, 400);
+      });
+
+      /* ══ TOAST ══ */
+      function showToast(msg, type) {
+        var wrap = document.getElementById('toastWrap');
+        var t = document.createElement('div');
+        t.className = 'toast' + (type === 'warn' ? ' warn' : type === 'err' ? ' err' : '');
+        var icon = type === 'warn'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+          : type === 'err'
+            ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
+        t.innerHTML = icon + msg;
+        wrap.appendChild(t);
+        setTimeout(function () { t.classList.add('out'); setTimeout(function () { t.remove(); }, 350); }, 3000);
+      }
+
+      /* ══ SIDEBAR ══ */
+      var menuToggle = document.getElementById('menuToggle'), sidebar = document.getElementById('sidebar');
+      menuToggle && menuToggle.addEventListener('click', function (e) { e.stopPropagation(); sidebar.classList.toggle('open'); });
+      document.addEventListener('click', function (e) {
+        if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== menuToggle && !menuToggle.contains(e.target))
+          sidebar.classList.remove('open');
+      });
+
+      /* ══ DEFAULTS ══ */
+      document.getElementById('letterDate').value = new Date().toISOString().slice(0, 10);
+      updatePreview();
+
+      /* ════════════════════════════════════
+         SEND MODAL
+      ════════════════════════════════════ */
+      var EMPLOYEES = [
+        { id: 'E001', name: 'Arjun Mehta', email: 'arjun.mehta@thinkinfo.com', dept: 'IT', role: 'Senior Developer', av: 'AM' },
+        { id: 'E002', name: 'Sneha Reddy', email: 'sneha.reddy@thinkinfo.com', dept: 'HR', role: 'HR Specialist', av: 'SR' },
+        { id: 'E003', name: 'Vikram Singh', email: 'vikram.singh@thinkinfo.com', dept: 'Sales', role: 'Sales Executive', av: 'VS' },
+        { id: 'E004', name: 'Divya Nair', email: 'divya.nair@thinkinfo.com', dept: 'Frontend', role: 'UI Developer', av: 'DN' },
+        { id: 'E005', name: 'Rajan Iyer', email: 'rajan.iyer@thinkinfo.com', dept: 'IT', role: 'Backend Engineer', av: 'RI' },
+        { id: 'E006', name: 'Pooja Kaur', email: 'pooja.kaur@thinkinfo.com', dept: 'Finance', role: 'Financial Analyst', av: 'PK' },
+        { id: 'E007', name: 'Aditya Sharma', email: 'aditya.sharma@thinkinfo.com', dept: 'Operations', role: 'Operations Lead', av: 'AS' },
+      ];
+      var INTERNS = [
+        { id: 'I001', name: 'Priya Patel', email: 'priya.patel@intern.com', dept: 'IT', role: 'Web Dev Intern', av: 'PP' },
+        { id: 'I002', name: 'Rohan Das', email: 'rohan.das@intern.com', dept: 'Frontend', role: 'UI/UX Intern', av: 'RD' },
+        { id: 'I003', name: 'Ananya Rao', email: 'ananya.rao@intern.com', dept: 'HR', role: 'HR Intern', av: 'AR' },
+        { id: 'I004', name: 'Kiran Joshi', email: 'kiran.joshi@intern.com', dept: 'Sales', role: 'Sales Intern', av: 'KJ' },
+        { id: 'I005', name: 'Meera Thomas', email: 'meera.thomas@intern.com', dept: 'Micro Biology', role: 'Lab Intern', av: 'MT' },
+      ];
+
+      var currentTab = 'emp';
+      var selectedMap = {};
+
+      /* open */
+      document.getElementById('btnSend').addEventListener('click', function () {
+        if (!validate()) { showToast('Please fill all required fields before sending.', 'warn'); return; }
+        updatePreview();
+        selectedMap = {};
+        document.getElementById('recipSearch').value = '';
+        prefillCompose();
+        document.getElementById('composeView').style.display = '';
+        document.getElementById('successView').style.display = 'none';
+        switchTab('emp');
+        document.getElementById('sendModal').classList.add('open');
+      });
+
+      window.closeSendModal = function () {
+        document.getElementById('sendModal').classList.remove('open');
+      };
+
+      function prefillCompose() {
+        var name = document.getElementById('empName').value.trim() || 'Employee';
+        var role = document.getElementById('designation').value.trim() || 'the role';
+        var mName = document.getElementById('managerName').value.trim() || 'Priya Sharma';
+        var mTitle = document.getElementById('managerTitle').value.trim() || 'IT Manager';
+        document.getElementById('composeSubject').value =
+          'Experience Certificate — ' + name + ' | Thinkinfo Expert Solutions';
+        document.getElementById('composeBody').value =
+          'Dear ' + name + ',\n\n' +
+          'Please find attached your Experience Certificate for your tenure as ' + role + ' at Thinkinfo Expert Solutions.\n\n' +
+          'We appreciate your contributions to our team and wish you the very best in your future endeavours.\n\n' +
+          'If you have any questions, please feel free to reach out.\n\n' +
+          'Warm regards,\n' + mName + '\n' + mTitle + '\nThinkinfo Expert Solutions';
+      }
+
+      window.switchTab = function (tab) {
+        currentTab = tab;
+        var te = document.getElementById('tabEmp'), ti = document.getElementById('tabIntern');
+        te.className = 'recip-tab' + (tab === 'emp' ? ' active emp' : ' emp');
+        ti.className = 'recip-tab' + (tab === 'intern' ? ' active intern' : ' intern');
+        document.getElementById('recipSearch').value = '';
+        renderList('');
+      };
+
+      window.filterRecipients = function () {
+        renderList(document.getElementById('recipSearch').value.toLowerCase());
+      };
+
+      function renderList(q) {
+        var data = currentTab === 'emp' ? EMPLOYEES : INTERNS;
+        var avCls = currentTab === 'emp' ? 'emp-av' : 'intern-av';
+        var filtered = data.filter(function (p) {
+          return !q || p.name.toLowerCase().includes(q) || p.dept.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
+        });
+        var listEl = document.getElementById('recipList');
+        if (!filtered.length) {
+          listEl.innerHTML = '<div class="recip-empty">No ' + (currentTab === 'emp' ? 'employees' : 'interns') + ' found.</div>';
+          return;
+        }
+        listEl.innerHTML = filtered.map(function (p) {
+          var sel = !!selectedMap[p.id];
+          return '<div class="recip-item' + (sel ? ' selected' : '') + '" onclick="toggleRecip(\'' + p.id + '\')">'
+            + '<div class="recip-av ' + avCls + '">' + p.av + '</div>'
+            + '<div class="recip-info">'
+            + '<div class="recip-name">' + p.name + '</div>'
+            + '<div class="recip-meta">' + p.dept + ' · ' + p.role + ' · ' + p.email + '</div>'
+            + '</div>'
+            + '<div class="recip-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>'
+            + '</div>';
+        }).join('');
+      }
+
+      window.toggleRecip = function (id) {
+        var all = EMPLOYEES.concat(INTERNS);
+        var p = all.filter(function (x) { return x.id === id; })[0];
+        if (!p) return;
+        if (selectedMap[id]) delete selectedMap[id];
+        else selectedMap[id] = p;
+        renderList(document.getElementById('recipSearch').value.toLowerCase());
+        renderChips();
+      };
+
+      function renderChips() {
+        var strip = document.getElementById('selectedStrip');
+        var keys = Object.keys(selectedMap);
+        if (!keys.length) { strip.innerHTML = ''; return; }
+        strip.innerHTML = keys.map(function (id) {
+          var p = selectedMap[id];
+          var intern = id.charAt(0) === 'I';
+          return '<span class="selected-chip' + (intern ? ' intern-chip' : '') + '">'
+            + p.name
+            + '<button class="chip-remove" onclick="toggleRecip(\'' + id + '\')">'
+            + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+            + '</button></span>';
+        }).join('');
+      }
+
+      window.doSend = function () {
+        var keys = Object.keys(selectedMap);
+        if (!keys.length) { showToast('Please select at least one recipient.', 'warn'); return; }
+        if (!document.getElementById('composeSubject').value.trim()) { showToast('Please enter a subject line.', 'warn'); return; }
+
+        document.getElementById('composeView').style.display = 'none';
+        document.getElementById('successView').style.display = '';
+
+        var names = keys.map(function (id) { return selectedMap[id].name; });
+        document.getElementById('sendSuccessMsg').textContent =
+          'Experience letter sent to ' + names.length + ' recipient' + (names.length > 1 ? 's' : '') + ' with the certificate attached.';
+        document.getElementById('sendRecipChips').innerHTML = keys.map(function (id) {
+          var p = selectedMap[id];
+          var intern = id.charAt(0) === 'I';
+          return '<span class="selected-chip' + (intern ? ' intern-chip' : '') + '" style="cursor:default">' + p.name + '</span>';
+        }).join('');
+
+        showToast('Experience letter sent to ' + names.join(', ') + '!', 'success');
+      };
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSendModal();
+      });
+
+    })();
+  </script>
+
+  <script>
+    /* ── Sync notification badge from localStorage ── */
+    (function () {
+      try {
+        var c = parseInt(localStorage.getItem('mgrNotifUnread') || '3', 10);
+        var b = document.getElementById('navNotifBadge');
+        if (b) { if (c > 0) { b.textContent = c; b.style.display = ''; } else { b.style.display = 'none'; } }
+      } catch (e) { }
+    })();
+  </script>
+  <script>
+    /* Dynamic Copyright Year */
+    (function () {
+      var el = document.getElementById('copyright-year');
+      if (el) el.textContent = new Date().getFullYear();
+    })();
+  </script>
+</body>
+
+</html>
